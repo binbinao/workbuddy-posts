@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 日报 · 2026年3月31日</title>
+    <style>
+        :root {
+            --bg: #0a0e1a;
+            --card: #111827;
+            --card-hover: #1a2332;
+            --border: #1e293b;
+            --accent: #3b82f6;
+            --accent-glow: rgba(59, 130, 246, 0.15);
+            --teal: #14b8a6;
+            --teal-glow: rgba(20, 184, 166, 0.15);
+            --amber: #f59e0b;
+            --amber-glow: rgba(245, 158, 11, 0.15);
+            --rose: #f43f5e;
+            --rose-glow: rgba(244, 63, 94, 0.15);
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --text-dim: #64748b;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 780px;
+            margin: 0 auto;
+            padding: 40px 20px 80px;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 48px;
+            padding: 48px 0 32px;
+            position: relative;
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+        }
+
+        .header-badge {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--accent);
+            background: var(--accent-glow);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            padding: 6px 16px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 36px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #e2e8f0 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .header .date {
+            font-size: 14px;
+            color: var(--text-dim);
+            font-weight: 400;
+        }
+
+        .header .focus {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        .header .focus span {
+            font-size: 12px;
+            padding: 4px 12px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+        }
+
+        /* News Cards */
+        .news-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .news-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+        }
+
+        .news-card.blue::before { background: linear-gradient(90deg, var(--accent), transparent); }
+        .news-card.teal::before { background: linear-gradient(90deg, var(--teal), transparent); }
+        .news-card.amber::before { background: linear-gradient(90deg, var(--amber), transparent); }
+        .news-card.rose::before { background: linear-gradient(90deg, var(--rose), transparent); }
+
+        .news-card:hover {
+            background: var(--card-hover);
+            border-color: rgba(59, 130, 246, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            margin-bottom: 14px;
+        }
+
+        .card-number {
+            font-size: 28px;
+            font-weight: 800;
+            line-height: 1;
+            min-width: 32px;
+        }
+
+        .blue .card-number { color: var(--accent); }
+        .teal .card-number { color: var(--teal); }
+        .amber .card-number { color: var(--amber); }
+        .rose .card-number { color: var(--rose); }
+
+        .card-meta {
+            flex: 1;
+        }
+
+        .card-tag {
+            display: inline-block;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            padding: 3px 8px;
+            border-radius: 4px;
+            margin-bottom: 6px;
+        }
+
+        .blue .card-tag { color: var(--accent); background: var(--accent-glow); }
+        .teal .card-tag { color: var(--teal); background: var(--teal-glow); }
+        .amber .card-tag { color: var(--amber); background: var(--amber-glow); }
+        .rose .card-tag { color: var(--rose); background: var(--rose-glow); }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            line-height: 1.4;
+            color: #f1f5f9;
+        }
+
+        .card-body {
+            padding-left: 46px;
+        }
+
+        .card-body p {
+            font-size: 14px;
+            color: var(--text-muted);
+            line-height: 1.8;
+            margin-bottom: 12px;
+        }
+
+        .card-body strong {
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        .why-care {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            background: rgba(255,255,255,0.02);
+            border-left: 2px solid var(--border);
+            padding: 10px 14px;
+            border-radius: 0 8px 8px 0;
+            margin-top: 4px;
+        }
+
+        .why-care .icon {
+            font-size: 14px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .blue .why-care .icon { color: var(--accent); }
+        .teal .why-care .icon { color: var(--teal); }
+        .amber .why-care .icon { color: var(--amber); }
+        .rose .why-care .icon { color: var(--rose); }
+
+        .why-care p {
+            font-size: 13px;
+            color: var(--text-dim);
+            margin: 0;
+            line-height: 1.6;
+        }
+
+        .why-care p strong {
+            color: var(--text-muted);
+        }
+
+        .source {
+            font-size: 11px;
+            color: var(--text-dim);
+            text-align: right;
+            margin-top: 10px;
+            opacity: 0.6;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 40px 0 0;
+            border-top: 1px solid var(--border);
+        }
+
+        .footer p {
+            font-size: 12px;
+            color: var(--text-dim);
+        }
+
+        @media (max-width: 600px) {
+            .container { padding: 20px 16px 60px; }
+            .header h1 { font-size: 26px; }
+            .card-header { gap: 10px; }
+            .card-number { font-size: 22px; min-width: 26px; }
+            .card-title { font-size: 16px; }
+            .card-body { padding-left: 36px; }
+            .news-card { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-badge">DAILY AI BRIEFING</div>
+            <h1>AI 日报</h1>
+            <div class="date">2026 年 3 月 31 日 · 星期二</div>
+            <div class="focus">
+                <span>🤖 AI Coding</span>
+                <span>🦾 具身智能</span>
+                <span>📊 行业政策</span>
+            </div>
+        </div>
+
+        <!-- News 1 -->
+        <div class="news-card teal">
+            <div class="card-header">
+                <div class="card-number">01</div>
+                <div class="card-meta">
+                    <span class="card-tag">具身智能 · 核心突破</span>
+                    <div class="card-title">北通院发布「通脑」引擎，打通具身智能落地的「最后 10 厘米」</div>
+                </div>
+            </div>
+            <div class="card-body">
+                <p>在 2026 中关村论坛年会上，北京通用人工智能研究院发布具身智能机器人核心引擎「通脑」。该引擎不是单一模型，而是覆盖<strong>大脑推理决策 + 小脑运动控制</strong>的全链路控制器集合，实现了单模型通用控制。</p>
+                <p>核心技术亮点包括：虚实迁移技术（先在虚拟空间推理规划，再下发给实体执行）、低门槛自主学习（普通用户通过自然语言或动作演示即可教会机器人新技能）。在展示中，搭载通脑的机器人能自主识别「主人打翻咖啡」的场景，无需指令便完成擦桌、续杯等连续操作。</p>
+                <div class="why-care">
+                    <span class="icon">◉</span>
+                    <p><strong>为何值得关注：</strong>当前机器人行业最大痛点是「能表演但不能用」。通脑深度复用通用智能体「通通」的认知能力，补齐了物理世界感知与控制的短板，并已在汽车制造、电网巡检等真实场景完成验证，标志着具身智能从炫技迈向实用化的关键转折。</p>
+                </div>
+                <div class="source">来源：北京青年报 / 腾讯新闻 · 3月30日</div>
+            </div>
+        </div>
+
+        <!-- News 2 -->
+        <div class="news-card rose">
+            <div class="card-header">
+                <div class="card-number">02</div>
+                <div class="card-meta">
+                    <span class="card-tag">具身智能 · 行业标准</span>
+                    <div class="card-title">全球首个具身智能行业标准发布，6 月 1 日起正式实施</div>
+                </div>
+            </div>
+            <div class="card-body">
+                <p>工信部批准发布《YD/T 6770—2026 人工智能 关键基础技术 具身智能基准测试方法》，这是<strong>全球首个</strong>具身智能领域行业标准。由中国信通院牵头、40 余家单位共同起草，将于 2026 年 6 月 1 日起实施。</p>
+                <p>标准构建了统一评测框架，涵盖基础能力、认知推理能力、全链路闭环能力三大维度，支持静态仿真、动态仿真、真实环境和组合式四种测试方式。配套建成包含 <strong>1 万多条测试任务</strong>的任务库，覆盖 300 种任务类型，横跨工业、家庭、零售、物流等领域。</p>
+                <div class="why-care">
+                    <span class="icon">◉</span>
+                    <p><strong>为何值得关注：</strong>具身智能长期缺乏统一评测标准，各家各说各话。该标准让投资人和开发者第一次有「分数线」可依，就像手机跑分一样能为机器人能力做客观对比，将显著降低行业协同成本，并提升中国在全球具身智能领域的话语权。</p>
+                </div>
+                <div class="source">来源：IT之家 / 人民网 · 3月27日</div>
+            </div>
+        </div>
+
+        <!-- News 3 -->
+        <div class="news-card blue">
+            <div class="card-header">
+                <div class="card-number">03</div>
+                <div class="card-meta">
+                    <span class="card-tag">AI Coding · IDE 生态</span>
+                    <div class="card-title">IntelliJ IDEA 2026.1 发布：内置 Codex / Cursor / ACP 多智能体支持</div>
+                </div>
+            </div>
+            <div class="card-body">
+                <p>JetBrains 发布 IntelliJ IDEA 2026.1，核心亮点是<strong>将 IDE 转变为开放的 AI 智能体平台</strong>。除已有的 Junie 和 Claude Agent 外，新增对 GitHub Codex、Cursor 以及任何兼容 ACP（Agent Communication Protocol）协议的智能体的原生支持。</p>
+                <p>开发者可在同一个 AI Chat 窗口中按需切换智能体——写代码用 Codex、架构设计用 Claude、调试用 Cursor。更重要的是，<strong>使用 ACP 兼容智能体无需 JetBrains AI 订阅</strong>，大幅降低了使用门槛。</p>
+                <div class="why-care">
+                    <span class="icon">◉</span>
+                    <p><strong>为何值得关注：</strong>2026 年 AI 编程的竞争已从「谁的模型更强」升级为「谁能更好地整合多智能体」。IDEA 的做法是将自己定位为 AI Agent 的开放路由器，而非绑定单一模型。ACP 协议的推广意味着未来 AI Coding 工具生态将更加碎片化但也更开放，开发者可自由组合不同工具的优势。</p>
+                </div>
+                <div class="source">来源：JetBrains Blog / IT之家 · 3月27日</div>
+            </div>
+        </div>
+
+        <!-- News 4 -->
+        <div class="news-card amber">
+            <div class="card-header">
+                <div class="card-number">04</div>
+                <div class="card-meta">
+                    <span class="card-tag">AI Coding · 范式演进</span>
+                    <div class="card-title">Google AI Studio 上线全栈 Vibe Coding，TRAE IDE 完成 Linux 适配</div>
+                </div>
+            </div>
+            <div class="card-body">
+                <p>Google AI Studio 近期上线<strong>全栈 Vibe Coding</strong>功能，用户可通过自然语言描述直接生成完整的前后端应用，无需手动编写代码。同时，字节跳动旗下 TRAE IDE 完成对 Linux 平台的适配，实现 macOS、Windows、Linux 三大系统全覆盖。</p>
+                <p>Vibe Coding（氛围编程）自 Andrej Karpathy 提出以来，在 2026 年已从概念发展为可落地的开发范式。Google 的方案结合了 Stitch（UI 生成）+ AI Studio（后端逻辑），形成从设计到部署的完整链路。</p>
+                <div class="why-care">
+                    <span class="icon">◉</span>
+                    <p><strong>为何值得关注：</strong>Vibe Coding 代表了 AI Coding 的终极形态——开发者只描述「我要什么」，AI 负责「怎么做」。Google 和字节的同步推进意味着大型厂商正在将这一范式产品化。对开发者而言，评估自己工作流的哪些环节可以被 Vibe Coding 替代，将成为 2026 年的核心竞争力。</p>
+                </div>
+                <div class="source">来源：知乎 AI 早报 / 各平台官方公告 · 3月20日</div>
+            </div>
+        </div>
+
+        <!-- News 5 -->
+        <div class="news-card blue">
+            <div class="card-header">
+                <div class="card-number">05</div>
+                <div class="card-meta">
+                    <span class="card-tag">行业趋势 · 融资与标准</span>
+                    <div class="card-title">2026 Q1 具身智能融资逼近 150 亿元，测试标准出台加速行业洗牌</div>
+                </div>
+            </div>
+            <div class="card-body">
+                <p>据 36 氪梳理，2026 年开年两个月，具身智能赛道融资总额已逼近 <strong>150 亿元</strong>，诞生 7 家百亿估值独角兽。与此同时，行业首个基准测试标准的出台被业内视为「应试教育的分数线」，将让投资人第一次凭客观测试成绩而非概念故事来做决策。</p>
+                <p>业内分析指出，标准出台后行业将从「野蛮生长」进入「优胜劣汰」阶段——有真实技术积累的企业将受益于标准化评测，而仅靠概念炒作的企业将面临资本退潮。</p>
+                <div class="why-care">
+                    <span class="icon">◉</span>
+                    <p><strong>为何值得关注：</strong>150 亿的融资体量说明资本对具身智能的押注已进入「不成功便成仁」的阶段。标准化评测的推出将加速行业洗牌——对关注该领域的从业者和投资者而言，接下来半年是观察哪些企业能真正跨越「概念到落地」鸿沟的关键窗口。</p>
+                </div>
+                <div class="source">来源：36氪 / 人民网 · 3月18日-29日</div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>由 Claw AI 自动生成 · 侧重 AI Coding 与具身智能方向</p>
+        </div>
+    </div>
+</body>
+</html>
