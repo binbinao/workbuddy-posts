@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 每日资讯简报 — 2026年4月29日</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, 'SF Pro Text', 'PingFang SC', 'Noto Sans SC', sans-serif; background: #f8f9fa; color: #2c2c2a; line-height: 1.7; font-size: 15px; padding: 24px 16px; }
+  .container { max-width: 720px; margin: 0 auto; }
+  
+  /* Header */
+  .header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); border-radius: 16px; padding: 32px 28px; color: #fff; margin-bottom: 24px; position: relative; overflow: hidden; }
+  .header::before { content: ''; position: absolute; top: -40px; right: -40px; width: 160px; height: 160px; border-radius: 50%; background: rgba(99,102,241,.15); }
+  .header::after { content: ''; position: absolute; bottom: -30px; left: 20px; width: 100px; height: 100px; border-radius: 50%; background: rgba(59,130,246,.1); }
+  .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; position: relative; z-index: 1; }
+  .badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,.12); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,.18); padding: 5px 12px; border-radius: 20px; font-size: 12px; color: rgba(255,255,255,.85); letter-spacing: .3px; }
+  .date-badge { font-variant-numeric: tabular-nums; }
+  h1 { font-size: 24px; font-weight: 700; margin-bottom: 6px; position: relative; z-index: 1; letter-spacing: -.3px; }
+  .subtitle { font-size: 14px; color: rgba(255,255,255,.65); position: relative; z-index: 1; }
+  
+  /* Tags */
+  .tags { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+  .tag { padding: 4px 12px; border-radius: 16px; font-size: 12px; font-weight: 500; }
+  .tag-coding { background: #EEEDFE; color: #534AB7; }
+  .tag-embodied { background: #E1F5EE; color: #0F6E56; }
+  .tag-industry { background: #FAEEDA; color: #854F0B; }
+
+  /* News Card */
+  .card { background: #fff; border-radius: 14px; border: 1px solid #e8e8e6; padding: 24px 26px; margin-bottom: 16px; transition: border-color .2s; }
+  .card:hover { border-color: #b4b2a9; }
+  .card-header { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 14px; }
+  .card-num { width: 32px; height: 32px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; flex-shrink: 0; color: #fff; }
+  .num-1 { background: linear-gradient(135deg, #E24B4A, #D85A30); }
+  .num-2 { background: linear-gradient(135deg, #BA7517, #EF9F27); }
+  .num-3 { background: linear-gradient(135deg, #0F6E56, #1D9E75); }
+  .num-4 { background: linear-gradient(135deg, #534AB7, #7F77DD); }
+  .num-5 { background: linear-gradient(135deg, #185FA5, #378ADD); }
+  .card-title-group { flex: 1; min-width: 0; }
+  .card-title { font-size: 17px; font-weight: 600; line-height: 1.45; margin-bottom: 6px; color: #2c2c2a; }
+  .card-meta { display: flex; align-items: center; gap: 10px; font-size: 12px; color: #888780; }
+  .card-tag { padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 500; }
+  .card-body { color: #444441; font-size: 14.5px; line-height: 1.75; margin-bottom: 14px; }
+  .highlight-box { background: #f6f7f4; border-left: 3px solid #888780; border-radius: 0 8px 8px 0; padding: 12px 16px; margin-top: 12px; font-size: 13.5px; }
+  .highlight-label { font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .8px; color: #888780; margin-bottom: 4px; }
+  .highlight-text { color: #444441; font-weight: 500; }
+
+  /* Stats Row */
+  .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+  .stat-item { background: #fafaf9; border-radius: 8px; padding: 10px 12px; text-align: center; }
+  .stat-value { font-size: 18px; font-weight: 700; color: #2c2c2a; }
+  .stat-label { font-size: 11px; color: #888780; margin-top: 2px; }
+
+  /* Footer */
+  .footer { text-align: center; margin-top: 28px; padding: 18px; color: #888780; font-size: 12.5px; line-height: 1.6; border-top: 1px solid #eeece8; }
+  .footer-icon { font-size: 16px; margin-right: 4px; }
+
+  @media (max-width: 520px) {
+    body { padding: 12px 10px; }
+    .header { padding: 24px 18px; }
+    h1 { font-size: 20px; }
+    .card { padding: 18px 16px; }
+    .stats-row { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .stat-value { font-size: 15px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- Header -->
+<div class="header">
+  <div class="header-top">
+    <span class="badge">AI Daily Briefing</span>
+    <span class="badge date-badge">2026-04-29 周三</span>
+  </div>
+  <h1>AI 每日资讯简报</h1>
+  <p class="subtitle">聚焦 AI Coding 与具身智能 · 筛选当日高价值动态</p>
+</div>
+
+<!-- Tags -->
+<div class="tags">
+  <span class="tag tag-coding">AI 编程</span>
+  <span class="tag tag-embodied">具身智能</span>
+  <span class="tag tag-industry">产业落地</span>
+</div>
+
+<!-- News 1 -->
+<div class="card">
+  <div class="card-header">
+    <div class="card-num num-1">1</div>
+    <div class="card-title-group">
+      <div class="card-title">OpenAI Codex 全面升级：从代码工具进化为全能 AI Agent</div>
+      <div class="card-meta">
+        <span class="card-tag" style="background:#EEEDFE;color:#534AB7;">AI Coding</span>
+        <span>2026-04 中旬发布</span>
+      </div>
+    </div>
+  </div>
+  <div class="card-body">
+    OpenAI 发布代号为 <strong>"Codex for (almost) everything"</strong> 的重大更新，将 Codex 从单纯的代码补全工具升级为全能型个人 AI Agent。新增六大核心能力：<strong>Computer Use（操控电脑）</strong>——可直接在 Mac 上点击鼠标、键盘输入、读取屏幕并后台运行；<strong>内置浏览器与图片生成</strong>；<strong>90+ 插件系统</strong>覆盖 JIRA/Slack/Gmail/Notion 等；<strong>记忆功能</strong>记住用户偏好与技术背景；以及<strong>自动化任务调度</strong>支持跨周执行。目前周活开发者已超 <strong>300 万</strong>，其中 50% 已将 Codex 当作通用助理使用。
+  </div>
+  <div class="highlight-box">
+    <div class="highlight-label">值得关注</div>
+    <div class="highlight-text">Codex 与 Claude Code 已进入"互相照镜子"阶段，AI 编程工具从竞争走向分层协作——Cursor 负责编排层、Claude Code 负责执行层、Codex 负责 Agent 层，三者正在合流为一套无人设计却自我组建的技术栈。</div>
+  </div>
+</div>
+
+<!-- News 2 -->
+<div class="card">
+  <div class="card-header">
+    <div class="card-num num-2">2</div>
+    <div class="card-title-group">
+      <div class="card-title">国家电网启动近 100 亿元具身智能采购计划</div>
+      <div class="card-meta">
+        <span class="card-tag" style="background:#E1F5EE;color:#0F6E56;">具身智能</span>
+        <span>2026-04-22 独家报道</span>
+      </div>
+    </div>
+  </div>
+  <div class="card-body">
+    国家电网内部印发《2026 年具身智能发展规划》，计划今年集中采购各类具身智能设备约 <strong>8500 台</strong>，总投资约 <strong>68 亿元</strong>。若计入南方电网及地方能源集团跟进采购，行业总规模有望突破 <strong>100 亿元</strong>。采购重点覆盖四大场景：电力巡检、带电作业、应急救援、仓储物流。
+  </div>
+  <div class="stats-row">
+    <div class="stat-item"><div class="stat-value">5000</div><div class="stat-label">四足巡检机器狗（台）</div></div>
+    <div class="stat-item"><div class="stat-value">500</div><div class="stat-label">人形作业机器人（台）</div></div>
+    <div class="stat-item"><div class="stat-value">25亿</div><div class="stat-label">人形单品预算</div></div>
+  </div>
+  <div class="highlight-box">
+    <div class="highlight-label">值得关注</div>
+    <div class="highlight-text">这是具身智能从"实验室演示"迈向"规模化商业落地"的里程碑事件。深谋科技的人形机器人"伏安"即将交付国网，成为业界首个满足中高压变电站带电作业场景的产品。</div>
+  </div>
+</div>
+
+<!-- News 3 -->
+<div class="card">
+  <div class="card-header">
+    <div class="card-num num-3">3</div>
+    <div class="card-title-group">
+      <div class="card-title">英伟达开源 Nemotron 3 Nano Omni：全模态推理模型瞄准企业级 Agent</div>
+      <div class="card-meta">
+        <span class="card-tag" style="background:#FAEEDA;color:#854F0B;">基础设施</span>
+        <span>2026-04-28 发布</span>
+      </div>
+    </div>
+  </div>
+  <div class="card-body">
+    英伟达在官网博客宣布推出全新开源模型 <strong>Nemotron 3 Nano Omni</strong>，定位为<strong>业内领先的开源全模态推理模型</strong>。该模型原生融合视觉、音频与语言三大模态能力，专为企业级 AI Agent 设计，可提供一体化的基础模型底座。英伟达宣称该模型能帮助 AI 智能体实现高达 <strong>9 倍的效率提升</strong>。
+  </div>
+  <div class="highlight-box">
+    <div class="highlight-label">值得关注</div>
+    <div class="highlight-text">全模态（视觉+音频+语言）+ 开源 + 企业级 Agent 定位，这款模型可能成为具身智能机器人"大脑"的重要候选方案之一，尤其适合需要同时处理图像感知、语音交互和逻辑推理的场景。</div>
+  </div>
+</div>
+
+<!-- News 4 -->
+<div class="card">
+  <div class="card-header">
+    <div class="card-num num-4">4</div>
+    <div class="card-title-group">
+      <div class="card-title">SpaceX 拟 600 亿美元收购 Cursor，AI 编程赛道资本白热化</div>
+      <div class="card-meta">
+        <span class="card-tag" style="background:#EEEDFE;color:#534AB7;">AI Coding</span>
+        <span>2026-04-21 公布</span>
+      </div>
+    </div>
+  </div>
+  <div class="card-body">
+    当地时间 4 月 21 日下午，SpaceX 宣布与 AI 编程明星创企 <strong>Cursor 达成协议</strong>：SpaceX 将获得未来以 <strong>600 亿美元</strong>收购 Cursor 的选择权，否则需支付 100 亿美元推进深度合作。此举意在将 Cursor 的代码生成能力嵌入星链（Starlink）、星舰等复杂系统的软件开发流程。<strong>同期国内新品密集发布</strong>：阿里推出 Qwen3.6-Max-Preview 强化智能体编程；月之暗面发布 Kimi K2.6 开源模型；字节推出 Trae AI 代码编辑器。
+  </div>
+  <div class="highlight-box">
+    <div class="highlight-label">值得关注</div>
+    <div class="highlight-text">600 亿美元的收购估值意味着资本市场对 AI 编程赛道的极高预期。结合 Anthropic 测试将 Claude Code 移出 Pro 订阅、xAI 即将推出 Grok Build 杀入编程赛道，整个领域正在经历前所未有的资本与技术双重竞赛。</div>
+  </div>
+</div>
+
+<!-- News 5 -->
+<div class="card">
+  <div class="card-header">
+    <div class="card-num num-5">5</div>
+    <div class="card-title-group">
+      <div class="card-title">超维动力发布 115 自由度全尺寸人形机器人 "KAI"</div>
+      <div class="card-meta">
+        <span class="card-tag" style="background:#E1F5EE;color:#0F6E56;">具身智能</span>
+        <span>2026-04-26 发布</span>
+      </div>
+    </div>
+  </div>
+  <div class="card-body">
+    4 月 26 日，超维动力（Kinetix AI）正式推出全球首个 <strong>115 个自由度全尺寸人形机器人 KAI</strong>。KAI 单手配备 36 自由度灵巧手，运动范围逼近真人；搭载 1.7kWh 半固态电池支持 3 小时双臂连续作业，双臂负载近 20kg；全身触觉皮肤含 <strong>18000 个触点</strong>，可感知 0.1N 轻微触碰，实现安全自然的近距离协作。
+  </div>
+  <div class="stats-row">
+    <div class="stat-item"><div class="stat-value">115</div><div class="stat-label">全身自由度</div></div>
+    <div class="stat-item"><div class="stat-value">36</div><div class="stat-label">单手自由度</div></div>
+    <div class="stat-item"><div class="stat-value">18000</div><div class="stat-label">全身触点数</div></div>
+  </div>
+  <div class="highlight-box">
+    <div class="highlight-label">值得关注</div>
+    <div class="highlight-text">115 个自由度和 18000 个触觉感知点标志着人形机器人在硬件层面逼近人类运动能力，为具身智能在精细操作场景（如装配、医疗、家政）的商业化奠定了硬件基础。</div>
+  </div>
+</div>
+
+<!-- Footer -->
+<div class="footer">
+  <p><span class="footer-icon">&#x1F4BB;</span> 本简报由 AI 自动生成，信息来源包括新浪财经、证券时报、每经新闻、掘金社区、PR Newswire 等</p>
+  <p style="margin-top: 6px;">关注方向：AI Coding &amp; Embodied AI &nbsp;|&nbsp; 下次推送：明日 10:00</p>
+</div>
+
+</div>
+</body>
+</html>

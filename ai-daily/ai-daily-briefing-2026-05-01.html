@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 日报 · 2026年5月1日</title>
+<style>
+  :root {
+    --primary: #6366f1;
+    --primary-dark: #4f46e5;
+    --bg: #0f0f1a;
+    --card-bg: #1a1a2e;
+    --card-hover: #222240;
+    --text: #e2e8f0;
+    --text-muted: #94a3b8;
+    --accent-red: #ef4444;
+    --accent-green: #22c55e;
+    --border: rgba(99,102,241,0.2);
+    --glow: rgba(99,102,241,0.15);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    padding: 20px;
+  }
+  .container { max-width: 800px; margin: 0 auto; }
+
+  /* Header */
+  .header {
+    text-align: center;
+    padding: 40px 20px 30px;
+    background: linear-gradient(135deg, rgba(99,102,241,0.12), rgba(168,85,247,0.08));
+    border-radius: 16px;
+    margin-bottom: 30px;
+    border: 1px solid var(--border);
+  }
+  .header-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--primary), #a855f7);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 14px;
+    border-radius: 20px;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+  }
+  .header h1 {
+    font-size: 28px;
+    font-weight: 800;
+    background: linear-gradient(135deg, #fff, #c7d2fe);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 8px;
+  }
+  .header .date {
+    font-size: 15px;
+    color: var(--text-muted);
+    font-weight: 400;
+  }
+  .header .focus {
+    display: inline-block;
+    margin-top: 10px;
+    font-size: 13px;
+    color: #a5b4fc;
+    background: rgba(99,102,241,0.15);
+    padding: 4px 14px;
+    border-radius: 20px;
+  }
+
+  /* Summary Bar */
+  .summary-bar {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+    justify-content: center;
+  }
+  .summary-tag {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 18px;
+    font-size: 13px;
+    color: var(--text-muted);
+    transition: all 0.25s ease;
+  }
+  .summary-tag strong { color: #a5b4fc; font-weight: 600; }
+  .summary-tag:hover {
+    border-color: var(--primary);
+    color: var(--text);
+    transform: translateY(-2px);
+  }
+
+  /* Cards */
+  .story-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 26px;
+    margin-bottom: 18px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .story-card:hover {
+    background: var(--card-hover);
+    border-color: rgba(99,102,241,0.45);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(99,102,241,0.12);
+  }
+  .story-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    border-radius: 4px 0 0 4px;
+  }
+  .story-card:nth-child(1)::before { background: linear-gradient(180deg, #6366f1, #a855f7); }
+  .story-card:nth-child(2)::before { background: linear-gradient(180deg, #f59e0b, #ef4444); }
+  .story-card:nth-child(3)::before { background: linear-gradient(180deg, #22c55e, #06b6d4); }
+  .story-card:nth-child(4)::before { background: linear-gradient(180deg, #ec4899, #f43f5e); }
+  .story-card:nth-child(5)::before { background: linear-gradient(180deg, #3b82f6, #8b5cf6); }
+
+  .story-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .story-num {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+  }
+  .story-card:nth-child(1) .story-num { background: linear-gradient(135deg, #6366f1, #a855f7); }
+  .story-card:nth-child(2) .story-num { background: linear-gradient(135deg, #f59e0b, #ef4444); }
+  .story-card:nth-child(3) .story-num { background: linear-gradient(135deg, #22c55e, #06b6d4); }
+  .story-card:nth-child(4) .story-num { background: linear-gradient(135deg, #ec4899, #f43f5e); }
+  .story-card:nth-child(5) .story-num { background: linear-gradient(135deg, #3b82f6, #8b5cf6); }
+
+  .story-title-area { flex: 1; }
+  .story-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.4;
+    margin-bottom: 4px;
+  }
+  .story-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+  .tag {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 500;
+  }
+  .tag-coding { background: rgba(99,102,241,0.2); color: #a5b4fc; }
+  .tag-robot { background: rgba(34,197,94,0.2); color: #86efac; }
+  .tag-policy { background: rgba(245,158,11,0.2); color: #fcd34d; }
+  .tag-industry { background: rgba(236,72,153,0.2); color: #f9a8d4; }
+  .tag-fun { background: rgba(239,68,68,0.2); color: #fca5a5; }
+
+  .story-body { color: var(--text-muted); font-size: 14px; line-height: 1.75; padding-left: 40px; }
+  .story-body p { margin-bottom: 8px; }
+  .highlight-box {
+    background: rgba(99,102,241,0.08);
+    border-left: 3px solid var(--primary);
+    padding: 10px 14px;
+    border-radius: 0 8px 8px 0;
+    margin: 12px 0;
+    font-size: 13.5px;
+    color: #c7d2fe;
+  }
+  .highlight-box strong { color: #e0e7ff; }
+
+  /* Trends Section */
+  .trends-section {
+    background: linear-gradient(135deg, rgba(99,102,241,0.08), rgba(168,85,247,0.05));
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 26px;
+    margin-top: 28px;
+  }
+  .trends-section h2 {
+    font-size: 17px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .trends-section h2::before {
+    content: '📊';
+  }
+  .trend-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(99,102,241,0.1);
+    font-size: 14px;
+  }
+  .trend-item:last-child { border-bottom: none; }
+  .trend-bullet {
+    flex-shrink: 0;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--primary);
+    margin-top: 8px;
+  }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    padding: 24px;
+    color: var(--text-muted);
+    font-size: 12px;
+    opacity: 0.6;
+  }
+
+  @media (max-width: 600px) {
+    body { padding: 12px; }
+    .header h1 { font-size: 22px; }
+    .story-card { padding: 18px; }
+    .story-body { padding-left: 0; }
+    .story-title { font-size: 15.5px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- Header -->
+<div class="header">
+  <div class="header-badge">AI Daily Briefing</div>
+  <h1>🤖 AI 每日情报速递</h1>
+  <div class="date">2026年5月1日 · 星期四 · 劳动节</div>
+  <div class="focus">🎯 关注方向：AI Coding · 具身智能（Embodied AI）</div>
+</div>
+
+<!-- Summary -->
+<div class="summary-bar">
+  <div class="summary-tag"><strong>5条</strong> 核心动态</div>
+  <div class="summary-tag"><strong>OpenAI</strong> Codex 移动端布局</div>
+  <div class="summary-tag"><strong>GPT-5.5</strong> 哥布林禁令泄露</div>
+  <div class="summary-tag"><strong>宇树</strong> 2.69万机器人发布</div>
+  <div class="summary-tag"><strong>魔法原子</strong> 硅谷GEIS大会</div>
+  <div class="summary-tag"><strong>JAL</strong> 中国机器人出海</div>
+</div>
+
+<!-- Story 1: OpenAI Codex Mobile -->
+<div class="story-card">
+  <div class="story-header">
+    <div class="story-num">01</div>
+    <div class="story-title-area">
+      <div class="story-title">OpenAI 曝光手机版 Codex：从"编程工具"升级为"口袋指挥部"</div>
+      <div class="story-tags">
+        <span class="tag tag-coding">AI 编程</span>
+        <span class="tag tag-industry">产品战略</span>
+      </div>
+    </div>
+  </div>
+  <div class="story-body">
+    <p>据 IT之家援引 9to5Mac 报道，OpenAI 内部正计划推出 <strong>Codex iPhone 配套应用</strong>，定位从纯编程工具（Agentic Coding）拓展至通用生产力工具。</p>
+    <div class="highlight-box">
+      <strong>核心变化：</strong>Mac 版 Codex 已新增"你从事什么类型的工作？"提示词（工程/财务/营销等 10 个选项），系统自动调整界面——这意味着 Codex 不再只服务程序员。
+    </div>
+    <p><strong>iPhone 应用功能预览：</strong></p>
+    <p>• 📱 定位为<strong>"开发智能体指挥中心"</strong>（Agent Command Center），区别于现有移动版 ChatGPT<br>
+       • 🔍 随时监控后台自动化任务（代码重构、测试跑批等）<br>
+       • ✅ 审批 Diffs 和代码修改建议，深度集成版本控制<br>
+       • 🎤 支持语音指令 + 触控操作，适配通勤/闲暇场景</p>
+    <p><strong>⚡ 值得关注：</strong>Codex 正在完成从"开发者工具"到"全民 AI Agent 入口"的战略跃迁。结合此前奥特曼"Codex 将成为我与电脑交互的主要方式"的表态，OpenAI 的野心已超越编程赛道本身。</p>
+  </div>
+</div>
+
+<!-- Story 2: GPT-5.5 Goblin Ban -->
+<div class="story-card">
+  <div class="story-header">
+    <div class="story-num">02</div>
+    <div class="story-title-area">
+      <div class="story-title">GPT-5.5 "哥布林禁令"意外曝光，揭开大模型人格漂移冰山一角</div>
+      <div class="story-tags">
+        <span class="tag tag-coding">AI 编程</span>
+        <span class="tag tag-fun">模型安全</span>
+      </div>
+    </div>
+  </div>
+  <div class="story-body">
+    <p>随着 Codex CLI 开源，GPT-5.5 的底层系统提示词意外曝光——其中一条令人费解的禁令刷爆科技圈：<strong>"无绝对必要关联，严禁模型谈论哥布林、小精灵、浣熊、巨魔、食人魔、鸽子。"</strong></p>
+    <div class="highlight-box">
+      <strong>事件还原：</strong>这条禁令在 3500+ 词的基础指令中重复出现 <strong>两次</strong>，优先级与禁止执行破坏性命令等核心安全规范并列。OpenAI 随后承认：这是强化学习训练中的"怪癖"，最早出现在 GPT-5.1 的"Nerdy"人格选项中，goblin 提及量同比暴涨 175% 后扩散至其他场景。
+    </div>
+    <p><strong>技术本质：</strong>当某种语言风格在 RL 训练中获得正面反馈后，会像病毒一样迁移到其他输出场景，尤其在被反复用于后续微调数据集时。这暴露了大模型训练中一个鲜少公开讨论的问题——<strong>模型"性格"的自我繁殖与失控修补</strong>。</p>
+    <p><strong>⚡ 值得关注：</strong>这不仅是趣闻，更是 AI 安全领域的重要案例——当模型开始自主发展出训练者未曾预设的行为模式时，现有的对齐方法是否足够？Codex CLI 开源让这一问题首次被公众直接审视。</p>
+  </div>
+</div>
+
+<!-- Story 3: Unitree R1 -->
+<div class="story-card">
+  <div class="story-header">
+    <div class="story-num">03</div>
+    <div class="story-title-area">
+      <div class="story-title">宇树科技发布 2.69 万双臂人形机器人 R1，刷新商业化价格底线</div>
+      <div class="story-tags">
+        <span class="tag tag-robot">具身智能</span>
+        <span class="tag tag-industry">硬件突破</span>
+      </div>
+    </div>
+  </div>
+  <div class="story-body">
+    <p>4 月 30 日，宇树科技正式发布双臂人形机器人系列 <strong>R1</strong>，起售价仅 <strong>2.69 万元人民币</strong>，是目前已知最便宜的商业化人形机器人产品。</p>
+    <div class="highlight-box">
+      <strong>关键参数：</strong>整机 15–31 自由度 | 手臂负载 2kg | 末端精度 ±0.1mm | 头部算力 10TOPS | 8核CPU | 续航约 1.5h
+    </div>
+    <p><strong>四大版本矩阵：</strong>R1-A5/A7（5/7自由度单臂×2）+ 固定底座/移动底盘可选；末端支持二指夹爪/三指灵巧手/五指灵巧手快速更换。</p>
+    <p><strong>目标场景：</strong>轻工业装配、实验室操作辅助、商业服务三大方向。配合语音 + 视觉双模交互系统，主打<strong>超快速部署、多场景落地</strong>。</p>
+    <p><strong>⚡ 值得关注：</strong>2.69 万的价格将人形机器人从"展示品"拉入中小企业可承受区间。同日，日本航空宣布将在羽田机场测试宇树 G1 执行行李搬运任务——中国机器人企业正加速从国内市场走向全球交付验证阶段。</p>
+  </div>
+</div>
+
+<!-- Story 4: Magic Atom GEIS -->
+<div class="story-card">
+  <div class="story-header">
+    <div class="story-num">04</div>
+    <div class="story-title-area">
+      <div class="story-title">魔法原子硅谷 GEIS 大会："脑+手+体"三位一体，2036 年冲刺 140 亿美元营收</div>
+      <div class="story-tags">
+        <span class="tag tag-robot">具身智能</span>
+        <span class="tag tag-industry">行业格局</span>
+      </div>
+    </div>
+  </div>
+  <div class="story-body">
+    <p>美西时间 4 月 28 日，魔法原子在硅谷举办首届全球具身智能创新大会（GEIS），一口气发布三款核心产品：</p>
+    <div class="highlight-box">
+      <strong>🧠 Magic-Mix 世界模型</strong> — 解决物理空间环境理解与推演决策问题，让机器人在面对真实世界不可控性时不宕机<br>
+      <strong>✋ MagicHand H01 灵巧手</strong> — 20 自由度（上代11→翻倍）、44个三维触觉传感器、5mm级硬件闭环响应，直击马斯克称 Optimus 最大卡点之一<br>
+      <strong>🤖 MagicBot X1 旗舰本体</strong> — 31主动自由度、运动速度提升30%+、运动范围提升超50%，已做标准版/科研版分型
+    </div>
+    <p><strong>战略野心：</strong>宣布未来五年持续投入 10 亿美元，2036 年冲刺 <strong>140 亿美元营收</strong>。目前已覆盖全球 50 个国家地区，海外收入占比超 60%，日均数据采集约 16,000 条，高质量数据规模超 100 万小时。</p>
+    <p><strong>⚡ 值得关注：</strong>魔法原子的"千景共创"生态计划和 X1 双线分型表明其商业化路径已清晰。具身智能竞争正在变重——拼的不只是单台机器人能力，还有谁能构建"场景部署→数据采集→模型迭代→规模化交付"的数据飞轮。</p>
+  </div>
+</div>
+
+<!-- Story 5: JAL Airport Robots -->
+<div class="story-card">
+  <div class="story-header">
+    <div class="story-num">05</div>
+    <div class="story-title-area">
+      <div class="story-title">日本航空羽田机场引入中国人形机器人：优必选 Walker E + 宇树 G1</div>
+      <div class="story-tags">
+        <span class="tag tag-robot">具身智能</span>
+        <span class="tag tag-policy">出海落地</span>
+      </div>
+    </div>
+  </div>
+  <div class="story-body">
+    <p>日本航空（JAL）联合 GMO Internet Group 宣布：自 <strong>2026年5月起</strong>，在东京羽田机场启动航空业首个人形机器人应用实验。参与实验的两款机器人均由中国企业制造：<strong>宇树 G1 + 优必选 Walker E</strong>。</p>
+    <div class="highlight-box">
+      <strong>实验范围：</strong>货物装卸 → 行李摆放 → 机舱清洁 → 飞机引导。实验将持续到 2028 年，初期通过英伟达 Isaac Simulator 创建数字孪生进行虚拟训练后再实机部署。
+    </div>
+    <p><strong>背景驱动力：</strong>日本人口连续 16 年减少，2025 年新生儿仅 31.9 万（同比降 3.3%）。机场地面保障岗位面临严重人力缺口，传统固定式自动化设备难以适应复杂作业流程，人形机器人成为最优解。</p>
+    <p><strong>⚡ 值得关注：</strong>这是中国具身智能企业在海外高门槛场景的一次重要突破。JAL 选择两款中国机器人同时入场测试，说明国产机器人在可靠性、成本和适应性方面已获得国际主流客户认可。"出海交付"正成为继国内量产之后的第二增长曲线。</p>
+  </div>
+</div>
+
+<!-- Trends -->
+<div class="trends-section">
+  <h2>今日趋势洞察</h2>
+  <div class="trend-item">
+    <div class="trend-bullet"></div>
+    <div><strong>AI 编程进入"全职业渗透"期：</strong>Codex 从编程工具扩展为通用生产力平台，工信部同步启动"人工智能+软件"专项行动加速智能编程研发应用。MaaS / AgentaaS 被明确列为新培育业态。</div>
+  </div>
+  <div class="trend-item">
+    <div class="trend-bullet"></div>
+    <div><strong>大模型安全透明化拐点：</strong>Codex CLI 开源导致 GPT-5.5 系统提示词曝光，模型人格漂移问题首次被公众审视。开源 Agent 工具将推动 AI 安全从"黑盒信任"走向"白盒监督"。</div>
+  </div>
+  <div class="trend-item">
+    <div class="trend-bullet"></div>
+    <div><strong>具身智能价格战打响：</strong>宇树 R1 以 2.69 万元刷新商业化底线，叠加 JAL 羽田机场实验、魔法原子 140 亿美元目标，"量产降价+出海验证+生态飞轮"三重逻辑共振，2026 具身智能交付元年进一步确认。</div>
+  </div>
+  <div class="trend-item">
+    <div class="trend-bullet"></div>
+    <div><strong>中国机器人集体出海：</strong>宇树 G1、优必选 Walker E 同步进入日本航空场景；魔法原子海外收入占比超 60%。从"中国制造"到"中国方案输出"的路径正在形成。</div>
+  </div>
+</div>
+
+<div class="footer">
+  <p>📡 AI Daily Briefing · 自动生成于 2026-05-01 09:57 CST · 侧重 AI Coding 与 Embodied AI 方向</p>
+  <p>信息来源：IT之家 / 新浪科技 / 腾讯新闻 / 中国新闻网 / 凤凰科技 / Ars Technica / Wired 等</p>
+</div>
+
+</div>
+</body>
+</html>
