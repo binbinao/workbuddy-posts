@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 每日简报 · 2026年5月2日（周六）· 晚间更新版</title>
+<style>
+  :root {
+    --bg-primary: #0f1419;
+    --bg-card: #1a2332;
+    --bg-card-hover: #1f2d40;
+    --accent: #00d4aa;
+    --accent-dim: rgba(0,212,170,0.15);
+    --text-primary: #e8edf4;
+    --text-secondary: #8899aa;
+    --text-muted: #5c6d7e;
+    --border: #2a3a4d;
+    --warning: #ff6b6b;
+    --info: #4dabf7;
+    --purple: #a78bfa;
+    --purple-dim: rgba(167,139,250,0.12);
+    --orange: #fb923c;
+    --orange-dim: rgba(251,146,60,0.12);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.7;
+    padding: 20px;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  .header { text-align: center; padding: 32px 0 24px; border-bottom: 1px solid var(--border); margin-bottom: 28px; }
+  .header-badge { display: inline-block; background: linear-gradient(135deg, #00d4aa, #00a080); color: #fff; font-size: 12px; font-weight: 600; padding: 4px 14px; border-radius: 20px; letter-spacing: 1px; margin-bottom: 12px; }
+  .header h1 { font-size: 26px; font-weight: 700; letter-spacing: 1px; margin-bottom: 6px; }
+  .header h1 span { color: var(--accent); }
+  .header .date { font-size: 14px; color: var(--text-secondary); }
+  .header .focus { display: inline-block; margin-top: 10px; font-size: 13px; color: var(--text-muted); background: rgba(0,212,170,0.12); padding: 4px 14px; border-radius: 14px; }
+  .update-badge { display: inline-block; margin-top: 8px; font-size: 11px; color: var(--purple); background: var(--purple-dim); padding: 3px 12px; border-radius: 10px; font-weight: 500; }
+
+  .story { margin-bottom: 22px; }
+  .story-card { background: var(--bg-card); border-radius: 12px; padding: 24px 26px; border: 1px solid var(--border); transition: all 0.25s ease; position: relative; overflow: hidden; }
+  .story-card:hover { background: var(--bg-card-hover); border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,212,170,0.08); }
+  .story-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: linear-gradient(180deg, var(--accent), transparent); opacity: 0; transition: opacity 0.25s; }
+  .story-card:hover::before { opacity: 1; }
+
+  .story-header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+  .story-num { flex-shrink: 0; width: 28px; height: 28px; background: linear-gradient(135deg, var(--accent), #00a080); color: #fff; font-size: 13px; font-weight: 700; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+  .story-title { font-size: 17px; font-weight: 700; line-height: 1.45; flex: 1; }
+
+  .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+  .tag { font-size: 11px; padding: 3px 10px; border-radius: 10px; font-weight: 500; }
+  .tag-coding { background: rgba(77,171,247,0.15); color: var(--info); }
+  .tag-embodied { background: rgba(255,107,107,0.15); color: var(--warning); }
+  .tag-policy { background: rgba(255,193,7,0.15); color: #ffc107; }
+  .tag-market { background: rgba(156,39,176,0.15); color: #ce93d8; }
+  .tag-event { background: rgba(0,212,170,0.15); color: var(--accent); }
+  .tag-hot { background: var(--orange-dim); color: var(--orange); }
+
+  .story-body { font-size: 14.5px; color: var(--text-secondary); line-height: 1.8; }
+  .story-body p { margin-bottom: 8px; }
+  .highlight { color: var(--text-primary); font-weight: 600; background: var(--accent-dim); padding: 1px 6px; border-radius: 4px; }
+  .highlight-purple { color: var(--purple); font-weight: 600; background: var(--purple-dim); padding: 1px 6px; border-radius: 4px; }
+  .highlight-orange { color: var(--orange); font-weight: 600; background: var(--orange-dim); padding: 1px 6px; border-radius: 4px; }
+
+  .why-care { margin-top: 14px; padding: 14px 16px; background: rgba(0,212,170,0.06); border-left: 3px solid var(--accent); border-radius: 0 8px 8px 0; font-size: 13.5px; }
+  .why-care strong { color: var(--accent); font-weight: 700; }
+
+  .trends { margin-top: 32px; padding: 24px; background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border); }
+  .trends h2 { font-size: 17px; font-weight: 700; margin-bottom: 16px; color: var(--accent); display: flex; align-items: center; gap: 8px; }
+content: '📊';
+  .trend-list { list-style: none; }
+  .trend-list li { padding: 8px 0; font-size: 13.5px; color: var(--text-secondary); border-bottom: 1px dashed var(--border); display: flex; align-items: flex-start; gap: 10px; }
+  .trend-list li:last-child { border-bottom: none; }
+  .trend-list li::before { content: '\25b8'; color: var(--accent); flex-shrink: 0; margin-top: 2px; }
+
+  .footer { text-align: center; margin-top: 32px; padding: 20px 0; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-muted); }
+
+  @media (max-width: 600px) {
+    body { padding: 12px; }
+    .story-card { padding: 18px 16px; }
+    .header h1 { font-size: 21px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-badge">DAILY BRIEFING</div>
+  <h1>🤖 AI 每日简报 &middot; <span>2026-05-02</span></h1>
+  <div class="date">星期六 &middot; 晚间更新版</div>
+  <div class="focus">聚焦方向：AI Coding + 具身智能（Embodied AI）</div>
+  <div class="update-badge">🔥 本期含多条当日重磅独家追踪</div>
+</div>
+
+<!-- Story 1: Meta收购ARI -->
+<div class="story">
+  <div class="story-card">
+    <div class="story-header">
+      <div class="story-num">1</div>
+      <div class="story-title">Meta 正式收购机器人 AI 初创 ARI：扎克伯格要做机器人的「安卓平台」，与特斯拉/谷歌/亚马逊正面对决</div>
+    </div>
+    <div class="tags">
+      <span class="tag tag-hot">🔥 当日重磅</span>
+      <span class="tag tag-embodied">具身智能</span>
+      <span class="tag tag-market">巨头并购</span>
+    </div>
+    <div class="story-body">
+      <p><span class="highlight-orange">Meta Platforms 于 5 月 1 日（周五）正式完成对 Assured Robot Intelligence（ARI）的收购</span>，标志着这家社交媒体巨头正式全面进军具身智能赛道。</p>
+      <p><strong>ARI 是谁：</strong>一家仅约 20 人的精锐团队，专注于为通用人形机器人构建 AI 基础模型。核心技术让机器人能在复杂动态环境中理解、预测并适应人类行为。</p>
+      <p><strong>明星创始人阵容：</strong></p>
+      <p>&bull; <span class="highlight">王晓龙（Xiaolong Wang）</span>&mdash;&mdash;UCSD 副教授，前英伟达基础模型研究员，CMU 机器人学博士，主攻具身智能泛化能力<br>
+      &bull; <span class="highlight">Lerrel Pinto</span>&mdash;&mdash;前 NYU 教授，专攻大规模机器人学习与自监督学习，此前联合创办的 Fauna Robotics 已被亚马逊收购</p>
+      <p><strong>Meta 战略定位：「软硬分离」</strong>&mdash;&mdash;不造机器人本体，专注开发传感器、底层 AI 模型与软件栈，目标成为人形机器人领域的<span class="highlight-purple">「通用操作系统」</span>（类似 Android 在手机产业的地位）。ARI 团队将整体并入 Meta 超级智能实验室，与去年成立的 Robotics Studio 深度合作。</p>
+    </div>
+    <div class="why-care">
+      <strong>值得关注：</strong>这是具身智能领域迄今最具战略意义的并购之一。继亚马逊今年 3 月收购 Fauna Robotics 后，Meta 紧随入局&mdash;&mdash;科技巨头对具身智能「大脑」的抢夺战已全面白热化。Meta 选择轻资产平台路线而非重资产制造，若成功将重塑整个产业链分工格局。人形机器人领域的「操作系统之争」即将开启。
+    </div>
+  </div>
+</div>
+
+<!-- Story 2: Apple Claude.md 泄露 -->
+<div class="story">
+  <div class="story-card">
+    <div class="story-header">
+      <div class="story-num">2</div>
+      <div class="story-title">苹果翻车！Apple Support 应用 v5.13 意外打包 Claude.md 文件，坐实内部大规模使用 Claude Code 构建生产级应用</div>
+    </div>
+    <div class="tags">
+      <span class="tag tag-hot">🔥 当日重磅</span>
+      <span class="tag tag-coding">AI 编程</span>
+      <span class="tag tag-event">行业趣闻</span>
+    </div>
+    <div class="story-body">
+      <p><span class="highlight-orange">全球最注重保密的科技公司苹果，在 5 月 1 日推送 Apple Support 应用 v5.13 更新时，意外将内部项目配置文件 claude.md 打包进发布版本。</span>安全研究员 Aaron Perris 发现后曝光，苹果在 <strong>24 小时内紧急撤回并发布热修复版本。</p>
+      <p><strong>泄露文件暴露了什么：</strong></p>
+      <p>&bull; 苹果在客服系统中深度融合了 <span class="highlight">Juno AI + 实时代理接入架构</span>，采用 AsyncStream 实时更新流和 Actor 并发模型<br>
+      &bull; 使用跨平台 UI 组件库进行模块化开发<br>
+      &bull; 项目级 <code>claude.md</code> 是 Claude Code 的标准配置&mdash;&mdash;用于告诉 AI 项目结构、编码规范和技术约束<br>
+      &bull; 这意味着<span class="highlight-purple">苹果工程师已在工作流中深度集成 Anthropic 的 Claude Code 作为生产级开发工具</span></p>
+      <p>舆论迅速发酵：「连苹果都在 Vibe Coding？」这与其对外宣传的自研 AI 形象形成鲜明反差。有开发者指出这与之前 Claude Code 源码泄露时误打包 source map 如出一辙，<span class="highlight">罪魁祸首可能就是 Claude Code 工具链本身的工作流设计缺陷</span>。</p>
+    </div>
+    <div class="why-care">
+      <strong>值得关注：</strong>这一事件的意义远超八卦层面&mdash;&mdash;它以最戏剧性的方式证实：<strong>Claude Code 已渗透进全球顶级科技公司的核心工程流程</strong>。当最封闭的苹果都在用竞品 AI 工具构建自己的产品，说明 AI 编程 Agent 已从「可选工具」变为「基础设施」。对开发者而言，Claude Code 的工程实践参考价值再添权威背书。
+    </div>
+  </div>
+</div>
+
+<!-- Story 3: Karpathy 红杉对谈 -->
+<div class="story">
+  <div class="story-card">
+    <div class="story-header">
+      <div class="story-num">3</div>
+      <div class="story-title">Karpathy 红杉峰会核弹级观点：「很多 App 根本不该出生」「理解是人类最后护城河」「CPU 将沦为配角」</div>
+    </div>
+    <div class="tags">
+      <span class="tag tag-coding">AI 编程</span>
+      <span class="tag tag-market">行业洞察</span>
+    </div>
+    <div class="story-body">
+      <p>在前 OpenAI 联合创始人、前 Tesla AI 总监 <span class="highlight">Andrej Karpathy</span> 出席红杉资本 AI Ascent 峰会的炉边对谈中，他抛出了一系列颠覆性的技术范式预测：</p>
+      <p><strong>\2460 「我从未像现在这样感觉自己落后于编程」</strong><br>
+      Karpathy 本人正是「Vibe Coding」概念的推动者，如今却公开反思：传统编程本身正在被颠覆，LLM 不是编程加速器而是全新计算范式。</p>
+      <p><strong>\2461 很多 App 根本不该出生&mdash;&mdash;中间层蒸发论</strong><br>
+      以他自建的 Menu Gen 为例：旧方式需要 OCR+数据库+图像生成+多层调用链；新模式只需上传照片+一句提示词。<span class="highlight-purple">「整个应用都显得多余……那个应用根本就不该存在。」</span>未来最重要的软件接口可能不是 GUI 或 API，<span class="highlight">而是可被模型理解的说明文本（.md 替代 .sh）</span>。</p>
+      <p><strong>\2462 软件 3.0 时代：提示词 = 程序语言</strong><br>
+      Software 1.0（人写规则）&rarr; 2.0（人训练模型）&rarr; <strong>3.0（人通过提示词编程模型）</strong>。LLM 的上下文窗口=内存，提示词=程序语言，模型本身=解释器。<span class="highlight">LLM 正在成为一种新的计算机。</span></p>
+      <p><strong>\2463 「CPU 将沦为配角」</strong><br>
+      最激进的远期预言：<span class="highlight-orange">未来神经网络承担大部分计算任务成为新的主计算层，传统 CPU 退居辅助位置仅处理少量确定性逻辑</span>&mdash;&mdash;整个计算机体系架构可能面临根本性重构。</p>
+      <p><strong>\2464 人类最后护城河：理解</strong><br>
+      <span class="highlight">「你可以外包你『思考』，但你不能外包你的『理解』。」</span>判断什么重要、什么值得追求、什么风险可接受&mdash;&mdash;这些能力无法自动化。人类角色从「编写者」转向「导演」，而<strong>增强理解力的方法是将信息不断重组沉淀到个人知识系统中</strong>。</p>
+    </div>
+    <div class="why-care">
+      <strong>值得关注：</strong>Karpathy 的每一次公开发言都会成为行业风向标。这次对谈的信息密度极高&mdash;&mdash;从软件形态演进、到编程范式更替、再到计算机架构革命和人类价值重定位，构成了一个完整的「AI 时代世界观」。其中「CPU 沦为配角」和「理解即护城河」两个判断尤其值得深度思考，它们指向的是 5-10 年级别的技术与社会变革方向。
+    </div>
+  </div>
+</div>
+
+<!-- Story 4: OpenAI Codex 升级为通用Agent -->
+<div class="story">
+  <div class="story-card">
+    <div class="story-header">
+      <div class="story-num">4</div>
+      <div class="story-title">OpenAI Codex 重大升级：整合 Slack + Google Workspace 全家桶，从编程工具进化为「通用电脑操控 Agent」，奥特曼称迎来自己的 ChatGPT 时刻</div>
+    </div>
+    <div class="tags">
+      <span class="tag tag-coding">AI 编程</span>
+      <span class="tag tag-market">产品动态</span>
+    </div>
+    <div class="story-body">
+      <p>OpenAI 近期对 Codex 进行了<span class="highlight-orange">战略级升级</span>，彻底突破了「编程工具」的产品边界：</p>
+      <p><strong>核心变化：从写代码到操控整台电脑</strong></p>
+      <p>&bull; <span class="highlight">全面整合 Slack</span>&mdash;&mdash;自动总结频道变化、草拟回复<br>
+      &bull; <span class="highlight">Google Workspace 全家桶</span>&mdash;&mdash;Gmail 读邮件/回信、Calendar 日历管理、Docs 文档协作、Sheets 数据分析<br>
+      &bull; 支持组织研究材料、制作电子表格和演示文稿、数据导出与对比分析<br>
+      &bull; YouTube 创作者实测：将整台 Mac 交由 Codex 控制，全程 AI 自动操作 Adobe Audition 修复音频、Photoshop 处理图像</p>
+      <p>CEO 奥特曼亲自站台称：<span class="highlight-purple">「Codex 正在经历属于自己的 ChatGPT 时刻」</span>。此前 Codex 已支持光标级后台交互（Mac 用户专属）、内置浏览器、90 余款插件、自主排期执行长期任务等能力。此次升级后，Codex 正式从「开发者工具」跃升为<span class="highlight">「任何使用电脑工作的人的数字管家」</span>。</p>
+      <p>这与 Greg Brockman 在红杉对谈中透露的信息完全一致&mdash;&mdash;Codex 已从服务软件工程师的工具，<strong>扩展为通用生产力平台</strong>。</p>
+    </div>
+    <div class="why-care">
+      <strong>值得关注：</strong>Codex 的「通用 Agent 化」与 Karpathy 的「软件 3.0」预测互为印证&mdash;&mdash;当 AI 不再只是写代码而是操控整个数字工作空间时，传统 IDE 和工具链的边界正在消融。对开发者而言，这意味着竞争维度从「谁的代码生成更准」升级为「谁能编排更复杂的多步工作流」。
+    </div>
+  </div>
+</div>
+
+<!-- Story 5: X Square Robot Wall-B -->
+<div class="story">
+  <div class="story-card">
+    <div class="story-header">
+      <div class="story-num">5</div>
+      <div class="story-title">X Square Robot 发布 Wall-B 具身智能模型：阿里/字节/小米/美团联合投资，35 天内机器人进入普通家庭</div>
+    </div>
+    <div class="tags">
+      <span class="tag tag-embodied">具身智能</span>
+      <span class="tag tag-market">商业化落地</span>
+    </div>
+    <div class="story-body">
+      <p>背靠<span class="highlight">阿里巴巴、字节跳动、小米、美团</span>四大巨头的 X Square Robot，于 4 月 27 日发布新一代具身智能基础模型 <strong>Wall-B</strong>，并宣布<strong>35 天内（约 6 月初）机器人将首次进入普通家庭部署</strong>。</p>
+      <p><strong>核心技术：World Unified Model (WUM) 统一架构</strong></p>
+      <p>&bull; 革命性创新：视觉 + 语言 + 动作 + 物理预测 <span class="highlight-purple">从第一天起在同一个网络中联合优化训练</span><br>
+      &bull; 区别于传统方法（各模块分别训练、物理预测作为后置附加层），WUM 让物理预测成为模型的内在涌现能力<br>
+      &bull; 基于真实非 staged 家庭环境数据，覆盖长尾场景：物品错放、视觉遮挡、突发障碍物等<br>
+      &bull; 机器人在行动前即可预判物理结果（力、摩擦力、碰撞动力学）</p>
+      <p><strong>现场演示亮点：花艺整理</strong>&mdash;&mdash;机器人在视觉遮挡情况下排列鲜花，实时调整抓握和动作应对花茎位置变化，<span class="highlight">无需预设轨迹完成</span>。</p>
+      <p>CEO 王乾坦诚技术仍处早期：「可能犯错，需要远程干预」，但强调<span class="highlight">连续运行+持续学习</span>是快速改进的关键路径。</p>
+    </div>
+    <div class="why-care">
+      <strong>值得关注：</strong>这是目前最激进的家用机器人落地时间表之一。WUM 架构的「四合一联合优化」思路代表了具身智能领域的技术前沿方向。四家巨头同时押注同一家公司，说明头部资本对「机器人进家庭」赛道的判断高度一致。即使初期不完美，真实世界数据的飞轮效应可能带来指数级改进。
+    </div>
+  </div>
+</div>
+
+<!-- Trends -->
+<div class="trends">
+  <h2>今日趋势观察（晚间更新版）</h2>
+  <ul class="trend-list">
+    <li><strong>具身智能「大脑争夺战」全面白热化</strong>&mdash;&mdash;Meta 收购 ARI 继亚马逊收购 Fauna Robotics 后入局，科技巨头从「造身体」转向「抢大脑」，人形机器人 OS 之争即将开启</li>
+    <li><strong>Claude Code 成为科技巨头隐秘标配</strong>&mdash;&mdash;苹果 Claude.md 泄露事件以戏剧性方式证实：AI 编程 Agent 已渗透顶级公司核心工程流程，从可选工具变为基础设施</li>
+    <li><strong>Karpathy 抛出完整 AI 世界观</strong>&mdash;&mdash;软件 3.0（提示词编程）、App 中间层蒸发、CPU 沦为配角、「理解即护城河」，构成从产品到架构到人类价值的三层递进预测体系</li>
+    <li><strong>Codex 正式「出圈」成为通用电脑 Agent</strong>&mdash;&mdash;整合 Slack/Google Workspace 全家桶，「AI 写代码占比从 20%→80%」+「通用生产力平台」双线验证 OpenAI 战略转型</li>
+    <li><strong>家用机器人进入倒计时阶段</strong>&mdash;&mdash;X Square Robot 四巨头加持下宣布 35 天家庭部署，WUM 统一架构代表具身智能技术前沿方向</li>
+  </ul>
+</div>
+
+<div class="footer">
+  <p>📬 AI Daily Briefing &middot; 晚间更新版 &middot; 自动生成于 2026-05-02 19:16 (GMT+8)</p>
+  <p>数据来源：新浪财经/机器之心/腾讯新闻/澎湃新闻/Yahoo Tech/ANTARA News/钜亨网 等 &middot; 仅供参考，不构成投资建议</p>
+</div>
+
+</body>
+</html>
