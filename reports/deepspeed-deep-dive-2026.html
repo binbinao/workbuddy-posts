@@ -1,0 +1,257 @@
+<!doctype html>
+<html style="      ">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DeepSpeed：那个让穷人也能炼大模型的狠角色</title>
+  <meta name="description" content="你有没有想过，训练一个千亿参数的大模型，到底需要多少张GPU？答案是：用DeepSpeed的话，可能比你想的少得多。">
+  
+  
+</head>
+<body style="padding: 24px; background: #ffffff; max-width: 860px; margin: 0 auto; font-family: -apple-system-font,BlinkMacSystemFont, Helvetica Neue, PingFang SC, Hiragino Sans GB , Microsoft YaHei UI , Microsoft YaHei ,Arial,sans-serif; font-size: 16px; line-height: 1.75; text-align: left;">
+  <div id="output">
+<section class="container" style="font-family: -apple-system-font,BlinkMacSystemFont, Helvetica Neue, PingFang SC, Hiragino Sans GB , Microsoft YaHei UI , Microsoft YaHei ,Arial,sans-serif; font-size: 16px; line-height: 1.75; text-align: left;">
+
+<blockquote style="margin: 1.5em 0; padding: 15px 20px; background: #f7f7f7; border-left: 4px solid #07c160; border-radius: 4px; color: #555; font-size: 15px;">你有没有想过，训练一个千亿参数的大模型，到底需要多少张GPU？答案是：用DeepSpeed的话，可能比你想的少得多。</blockquote>
+
+<h2 class="h2" data-heading="true" style="padding: 0.3em 1em; border-radius: 8px; font-size: calc(16px * 1.3); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">大模型时代的军备竞赛</h2>
+
+<p class="p" style="margin-top: 0 !important;">2023年初ChatGPT火遍全球之后，AI圈子掀起了一场"炼丹"军备竞赛。各大公司和实验室都在拼命训练更大、更强的语言模型。但问题来了——训练这些动辄几百亿、上千亿参数的模型，光是把模型塞进显存就是个天大的难题，更别说让它跑起来了。</p>
+
+<p class="p">打个比方：你想在一间10平米的出租屋里摆下一头大象。传统做法是——换个更大的房子（买更多更贵的GPU）。但如果你的预算有限呢？</p>
+
+<p class="p">微软研究院在2020年丢出了一个开源项目，叫DeepSpeed。它的思路很野：<strong>不换房子，而是把大象拆成零件，分别放进几个小房间里，需要的时候再组装回来。</strong></p>
+
+<p class="p">听起来简单？实际操作起来，这里面的工程量和技术含量，值得我们好好聊一聊。</p>
+
+<hr class="hr" style="height: 1px; border: none; margin: 2em 0; background: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0));">
+
+<h2 class="h2" data-heading="true" style="padding: 0.3em 1em; border-radius: 8px; font-size: calc(16px * 1.3); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">DeepSpeed到底是个啥</h2>
+
+<p class="p">DeepSpeed是微软开源的一个深度学习优化库，主要干一件事：让分布式训练和推理跑得更高效。注意，它不是PyTorch或TensorFlow那种全新的训练框架，更像是一个"外挂"。你现有的PyTorch代码几乎不用怎么改，加几行配置就能用上它的各种黑科技。</p>
+
+<p class="p">GitHub上星标超过35k。BLOOM（176B参数）、MT-NLG（530B参数）的训练背后，都有它的身影。</p>
+
+<p class="p">DeepSpeed官方把能力分成四块：训练、推理、压缩、科学计算。前两个是大头，后两个算是附赠。今天我们就聊训练，因为这是它真正让人眼前一亮的地方。</p>
+
+<hr class="hr" style="height: 1px; border: none; margin: 2em 0; background: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0));">
+
+<h2 class="h2" data-heading="true" style="padding: 0.3em 1em; border-radius: 8px; font-size: calc(16px * 1.3); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">ZeRO：DeepSpeed的杀手锏</h2>
+
+<p class="p">如果只能记住DeepSpeed的一个技术点，记ZeRO（Zero Redundancy Optimizer，零冗余优化器）就行了。这玩意儿是DeepSpeed的灵魂。</p>
+
+<h3 style="font-size: calc(16px * 1.1); margin: 1.5em 0 0.8em; padding-left: 10px; border-left: 3px solid #07c160;">先搞清楚问题出在哪</h3>
+
+<p class="p">要理解ZeRO解决了什么问题，得先知道传统数据并行（Data Parallelism）的痛点。</p>
+
+<p class="p">传统数据并行的做法是：每张GPU上放一份完整的模型副本，然后把数据切成小块分给各张GPU去算。算完之后同步一下梯度，更新参数。</p>
+
+<p class="p">问题出在哪？每张GPU上都存了一整份模型。假设你的模型有100亿参数，用fp32存储的话，光参数就要40GB。但GPU上要存的远不止参数：<strong>梯度又是40GB，Adam优化器的两个动量状态再加80GB。加起来160GB。</strong>一张A100才80GB显存，连一半都放不下，这还没算激活值呢。</p>
+
+<p class="p">你说怎么办？</p>
+
+<h3 style="font-size: calc(16px * 1.1); margin: 1.5em 0 0.8em; padding-left: 10px; border-left: 3px solid #07c160;">ZeRO的三级火箭</h3>
+
+<p class="p">ZeRO的核心思路非常直觉：既然8张GPU上存了8份一模一样的东西，那我们为什么不把这些东西拆开，每张GPU只存1/8呢？</p>
+
+<p class="p">ZeRO分三个Stage，一个比一个激进。</p>
+
+<p class="p"><strong>Stage 1</strong>，只切优化器状态。每张GPU只保留自己那份Adam动量，其他的不存。N张GPU的话，优化器占用直接降到1/N。通信开销几乎没增加，属于白捡的优化。</p>
+
+<p class="p"><strong>Stage 2</strong>，在此基础上把梯度也切了。反向传播的时候，每张GPU算完自己的梯度，通过reduce-scatter聚合到对应的卡上。显存又省一截，通信开销跟传统all-reduce差不多。</p>
+
+<p class="p"><strong>Stage 3</strong>，最激进的一档，连模型参数本身都切了。每张GPU上只存1/N的参数。但前向传播和反向传播的时候每一层都需要完整参数，怎么办？用的时候临时从别的GPU那里all-gather过来，用完就扔。通信量确实比前两个Stage大，不过DeepSpeed做了不少工程优化（计算和通信重叠、预取等），实际跑起来没有想象中那么慢。</p>
+
+<h3 style="font-size: calc(16px * 1.1); margin: 1.5em 0 0.8em; padding-left: 10px; border-left: 3px solid #07c160;">数字说话</h3>
+
+<p class="p">给你算一笔账。一个7.5B参数的模型，用传统数据并行：</p>
+
+<table style="width: 100%; border-collapse: collapse; margin: 1em 0; font-size: 15px;">
+<thead>
+<tr style="background: #f0f0f0;">
+<th style="padding: 10px 15px; text-align: left; border-bottom: 2px solid #ddd;">组件</th>
+<th style="padding: 10px 15px; text-align: left; border-bottom: 2px solid #ddd;">每张GPU显存</th>
+</tr>
+</thead>
+<tbody>
+<tr><td style="padding: 8px 15px; border-bottom: 1px solid #eee;">参数 (fp16)</td><td style="padding: 8px 15px; border-bottom: 1px solid #eee;">15 GB</td></tr>
+<tr><td style="padding: 8px 15px; border-bottom: 1px solid #eee;">梯度 (fp16)</td><td style="padding: 8px 15px; border-bottom: 1px solid #eee;">15 GB</td></tr>
+<tr><td style="padding: 8px 15px; border-bottom: 1px solid #eee;">优化器状态 (fp32)</td><td style="padding: 8px 15px; border-bottom: 1px solid #eee;">60 GB</td></tr>
+<tr style="font-weight: bold; background: #f9f9f9;"><td style="padding: 8px 15px; border-bottom: 2px solid #ddd;">合计</td><td style="padding: 8px 15px; border-bottom: 2px solid #ddd;">90 GB</td></tr>
+</tbody>
+</table>
+
+<p class="p">用ZeRO Stage 3，8张GPU的情况下，每张卡上只需要约 90/8 ≈ <strong>11.25 GB</strong>。</p>
+
+<p class="p">从90GB到11GB，原来一张A100都放不下的东西，现在几张消费级GPU可能就能凑合着训了。</p>
+
+<hr class="hr" style="height: 1px; border: none; margin: 2em 0; background: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0));">
+
+<h2 class="h2" data-heading="true" style="padding: 0.3em 1em; border-radius: 8px; font-size: calc(16px * 1.3); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">ZeRO-Offload和ZeRO-Infinity：穷到极致的方案</h2>
+
+<p class="p">微软的人显然觉得光切还不够。GPU显存实在不够用？那就往外搬。</p>
+
+<p class="p">ZeRO-Offload把优化器状态和梯度计算卸载到CPU上。CPU内存通常有几百GB，虽然算得慢，但优化器更新这步的计算量相比前向/反向传播来说很小，搬过去对整体速度影响有限。</p>
+
+<p class="p">ZeRO-Infinity更狠，连NVMe SSD都用上了。NVMe容量几个TB起步，成本比GPU显存低好几个数量级。通过数据流水线和预取机制，DeepSpeed把NVMe的带宽也榨出来了。</p>
+
+<blockquote style="margin: 1.5em 0; padding: 15px 20px; background: #f7f7f7; border-left: 4px solid #07c160; border-radius: 4px; color: #555; font-size: 15px;">论文里有个数字挺唬人的：一台DGX-2服务器（16张V100），ZeRO-Infinity能训超过32万亿参数的模型。当然"能训"是指不OOM、能跑起来，实际训练速度另说。</blockquote>
+
+<p class="p">但从工程角度看，这把单机能承载的模型规模推到了一个很夸张的高度。</p>
+
+<hr class="hr" style="height: 1px; border: none; margin: 2em 0; background: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0));">
+
+<h2 class="h2" data-heading="true" style="padding: 0.3em 1em; border-radius: 8px; font-size: calc(16px * 1.3); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">3D并行：DeepSpeed的组合拳</h2>
+
+<p class="p">大模型训练圈子里有三种经典的并行策略，DeepSpeed把它们打包成了所谓的"3D并行"：</p>
+
+<h3 style="font-size: calc(16px * 1.1); margin: 1.5em 0 0.8em; padding-left: 10px; border-left: 3px solid #07c160;">数据并行</h3>
+
+<p class="p">最朴素的并行方式。数据切成N份，每份交给一张GPU算，最后同步梯度。DeepSpeed在此基础上叠加了ZeRO优化，把数据并行的显存效率拉到了极致。</p>
+
+<h3 style="font-size: calc(16px * 1.1); margin: 1.5em 0 0.8em; padding-left: 10px; border-left: 3px solid #07c160;">张量并行</h3>
+
+<p class="p">一个Transformer层里面有很多矩阵乘法。张量并行把这些矩阵沿行或列切开，分给不同的GPU算。每张GPU只算矩阵的一部分。</p>
+
+<p class="p">好处是每一层的计算被拆分了，单张GPU上的显存压力小了。但代价是通信极其频繁——每一层的计算都需要GPU间通信。所以张量并行通常只在同一台机器内部的GPU之间使用（走NVLink），跨机器就太慢了。</p>
+
+<h3 style="font-size: calc(16px * 1.1); margin: 1.5em 0 0.8em; padding-left: 10px; border-left: 3px solid #07c160;">流水线并行</h3>
+
+<p class="p">把模型按层切成几段，每段放在不同的GPU上。数据像工厂流水线一样从第一段流到最后一段。</p>
+
+<p class="p">通信量比张量并行小很多（只在段与段之间传数据），适合跨机器使用。但它有个经典问题叫流水线气泡（Pipeline Bubble）：第一段在算新数据的时候，最后一段可能在干等，GPU利用率上不去。</p>
+
+<p class="p">DeepSpeed用micro-batch和一些调度策略来缓解这个问题。把一个大batch切成很多小的micro-batch，让流水线上的各段尽可能同时忙着。</p>
+
+<h3 style="font-size: calc(16px * 1.1); margin: 1.5em 0 0.8em; padding-left: 10px; border-left: 3px solid #07c160;">组合起来</h3>
+
+<p class="p">3D并行的威力在于组合。比如一个64张GPU的集群：</p>
+
+<p class="p" style="padding-left: 1.5em;">• 8台机器，每台8张GPU<br>• 每台机器内部的8张GPU之间用张量并行<br>• 8台机器之间用流水线并行<br>• 在此基础上叠加ZeRO的数据并行</p>
+
+<p class="p">每种并行策略都在最适合自己的范围内工作：张量并行吃NVLink的高带宽，流水线并行对跨机器的低带宽比较宽容，ZeRO负责最大化显存效率。</p>
+
+<p class="p">MT-NLG（530B参数）就是用这种3D并行训练出来的。</p>
+
+<hr class="hr" style="height: 1px; border: none; margin: 2em 0; background: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0));">
+
+<h2 class="h2" data-heading="true" style="padding: 0.3em 1em; border-radius: 8px; font-size: calc(16px * 1.3); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">DeepSpeed-Chat：让人人都能训ChatGPT</h2>
+
+<p class="p">2023年4月，微软放出了DeepSpeed-Chat，一套完整的ChatGPT训练工具链。它把RLHF的三步全包了：先拿标注好的对话数据做监督微调（SFT），再训练一个奖励模型给回复打分，最后用PPO算法做强化学习。</p>
+
+<p class="p">RLHF训练的麻烦在于要同时跑好几个模型（Actor、Critic、Reward Model、Reference Model），显存压力很大。DeepSpeed-Chat搞了个混合引擎（Hybrid Engine），把训练和推理统一管理，资源需求降了一大截。</p>
+
+<p class="p">实际效果：<strong>8张A100的服务器，9小时跑完一个13B模型的完整RLHF训练。</strong>1.3B的小模型，一张消费级GPU几个小时就搞定了。对没有大厂资源的研究者来说，这个门槛降得够多了。</p>
+
+<hr class="hr" style="height: 1px; border: none; margin: 2em 0; background: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0));">
+
+<h2 class="h2" data-heading="true" style="padding: 0.3em 1em; border-radius: 8px; font-size: calc(16px * 1.3); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">DeepSpeed-MoE：稀疏就是正义</h2>
+
+<p class="p">MoE（Mixture of Experts，混合专家模型）是近几年大模型的一个热门方向。大意是：模型里有很多"专家"子网络，但每次推理只激活一小部分。总参数量很大，但每次实际计算量不大。鱼和熊掌兼得的意思。</p>
+
+<p class="p">DeepSpeed在这块也下了功夫，搞了个DeepSpeed-MoE工具包。它提出了一种叫PR-MoE（金字塔残差MoE）的改进架构，在不掉精度的前提下砍掉了不少专家数量。同时还能通过知识蒸馏把MoE模型压缩成更小的dense模型，以及对MoE模型的分布式推理做了深度优化。</p>
+
+<p class="p">论文里的数字：<strong>推理速度提升4.5倍，成本降低9倍。</strong>这组数字对比的是同等质量的dense模型。</p>
+
+<hr class="hr" style="height: 1px; border: none; margin: 2em 0; background: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0));">
+
+<h2 class="h2" data-heading="true" style="padding: 0.3em 1em; border-radius: 8px; font-size: calc(16px * 1.3); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">和竞争对手比一比</h2>
+
+<p class="p">大模型训练框架不止DeepSpeed一家。</p>
+
+<h3 style="font-size: calc(16px * 1.1); margin: 1.5em 0 0.8em; padding-left: 10px; border-left: 3px solid #07c160;">Megatron-LM</h3>
+
+<p class="p">NVIDIA出品。强项是张量并行和流水线并行的极致优化，在纯N卡硬件上的训练吞吐量通常比DeepSpeed高。但使用门槛也更高，你需要按照它的代码结构来写模型，灵活性打了折扣。</p>
+
+<p class="p">有意思的是，BLOOM和MT-NLG实际上是Megatron-DeepSpeed混合使用的，用Megatron的并行策略加DeepSpeed的ZeRO。竞争对手也能搭伙干活。</p>
+
+<h3 style="font-size: calc(16px * 1.1); margin: 1.5em 0 0.8em; padding-left: 10px; border-left: 3px solid #07c160;">PyTorch FSDP</h3>
+
+<p class="p">FSDP（Fully Sharded Data Parallelism）是PyTorch原生的ZeRO实现，最大好处是不需要额外装东西，开箱即用，API也更Pythonic。</p>
+
+<p class="p">但功能丰富度不如DeepSpeed。Offload到NVMe、MoE支持、RLHF训练流程这些，FSDP都没有。需求简单用FSDP就行，要训大家伙还是得上DeepSpeed。</p>
+
+<h3 style="font-size: calc(16px * 1.1); margin: 1.5em 0 0.8em; padding-left: 10px; border-left: 3px solid #07c160;">怎么选</h3>
+
+<p class="p">追求极致速度、全N卡硬件，选Megatron。快速验证、不想装额外依赖，选FSDP。显存紧张、需要灵活性，选DeepSpeed。训超大模型，Megatron + DeepSpeed一起上。</p>
+
+<hr class="hr" style="height: 1px; border: none; margin: 2em 0; background: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0));">
+
+<h2 class="h2" data-heading="true" style="padding: 0.3em 1em; border-radius: 8px; font-size: calc(16px * 1.3); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">上手有多难？</h2>
+
+<p class="p">说了这么多，DeepSpeed用起来麻烦吗？</p>
+
+<p class="p">还真不太麻烦。</p>
+
+<p class="p">如果你已经有一个PyTorch训练脚本，接入DeepSpeed最少只需要三步：</p>
+
+<pre style="background: #1e1e1e; color: #d4d4d4; padding: 16px 20px; border-radius: 8px; font-size: 14px; line-height: 1.6; overflow-x: auto; margin: 1em 0;"><code style="font-family: 'SF Mono', Menlo, Consolas, monospace;"><span style="color: #c586c0;">import</span> <span style="color: #4ec9b0;">deepspeed</span>
+
+<span style="color: #6a9955;"># 1. 在argparse里加上DeepSpeed的参数</span>
+parser = deepspeed.add_config_arguments(parser)
+
+<span style="color: #6a9955;"># 2. 用deepspeed.initialize包装你的模型</span>
+model_engine, optimizer, _, _ = deepspeed.initialize(
+    args=args,
+    model=model,
+    model_parameters=model.parameters()
+)
+
+<span style="color: #6a9955;"># 3. 把原来的loss.backward()和optimizer.step()换掉</span>
+model_engine.backward(loss)
+model_engine.step()</code></pre>
+
+<p class="p">然后写一个JSON配置文件，指定你想用ZeRO的哪个Stage、batch size多少、要不要Offload之类的选项：</p>
+
+<pre style="background: #1e1e1e; color: #d4d4d4; padding: 16px 20px; border-radius: 8px; font-size: 14px; line-height: 1.6; overflow-x: auto; margin: 1em 0;"><code style="font-family: 'SF Mono', Menlo, Consolas, monospace;">{
+  <span style="color: #9cdcfe;">"train_batch_size"</span>: <span style="color: #b5cea8;">32</span>,
+  <span style="color: #9cdcfe;">"gradient_accumulation_steps"</span>: <span style="color: #b5cea8;">4</span>,
+  <span style="color: #9cdcfe;">"fp16"</span>: { <span style="color: #9cdcfe;">"enabled"</span>: <span style="color: #569cd6;">true</span> },
+  <span style="color: #9cdcfe;">"zero_optimization"</span>: {
+    <span style="color: #9cdcfe;">"stage"</span>: <span style="color: #b5cea8;">2</span>,
+    <span style="color: #9cdcfe;">"offload_optimizer"</span>: { <span style="color: #9cdcfe;">"device"</span>: <span style="color: #ce9178;">"cpu"</span> }
+  }
+}</code></pre>
+
+<p class="p">如果你用HuggingFace的Transformers库，那就更简单了——直接在Trainer里传个DeepSpeed配置就行，一行代码都不用改。</p>
+
+<p class="p">当然，要真正用好DeepSpeed，调参和配置优化是必不可少的。但至少入门门槛确实不高。</p>
+
+<hr class="hr" style="height: 1px; border: none; margin: 2em 0; background: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0));">
+
+<h2 class="h2" data-heading="true" style="padding: 0.3em 1em; border-radius: 8px; font-size: calc(16px * 1.3); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">几点实话</h2>
+
+<p class="p">聊了这么多好的，也得说说坑。</p>
+
+<p class="p">调试是个大问题。分布式训练本身就难调，DeepSpeed出错时给的信息有时候让人摸不着头脑。ZeRO Stage 3尤其折磨人，参数被打散了，任何单个进程里看到的都不是完整模型，debug的时候真的很崩溃。</p>
+
+<p class="p">版本兼容也是坑。CUDA版本、PyTorch版本、NCCL版本，哪个不对都会蹦出奇怪的编译错误。在新硬件上第一次跑通DeepSpeed，光配环境可能就要大半天。</p>
+
+<p class="p">还有一点容易被忽略：DeepSpeed并不是所有场景都最优。你的模型如果只有几亿参数，用普通DDP可能反而更快，因为ZeRO的通信和管理开销在小模型上不划算。</p>
+
+<p class="p">文档也是老问题了，迭代太快，文档跟不上。新特性的用法经常得去翻GitHub Issues或者直接读源码。</p>
+
+<hr class="hr" style="height: 1px; border: none; margin: 2em 0; background: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0));">
+
+<h2 class="h2" data-heading="true" style="padding: 0.3em 1em; border-radius: 8px; font-size: calc(16px * 1.3); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">写在最后</h2>
+
+<p class="p">回到开头那个比方。DeepSpeed没有给你更大的房子，而是教会了你把大象拆成零件、分房间存放。</p>
+
+<p class="p">从2020年到现在，它确实降低了炼大模型的硬件门槛。但我得说，分布式训练的水远比一篇文章能覆盖的深。如果你想认真搞这块，去读ZeRO那篇论文，是少数读起来不犯困的系统论文。</p>
+
+<blockquote style="margin: 1.5em 0; padding: 15px 20px; background: #f7f7f7; border-left: 4px solid #07c160; border-radius: 4px; color: #555; font-size: 15px;">一个实用建议：第一次用DeepSpeed，从ZeRO Stage 2开始。它在显存节省和通信开销之间取得了不错的平衡，大多数场景都够用。等你对系统行为有了感觉，再考虑Stage 3或者Offload。</blockquote>
+
+<p class="p">别一上来就开最大档。炼丹这事儿，稳比快重要。</p>
+
+<hr class="hr" style="height: 1px; border: none; margin: 2em 0; background: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0));">
+
+<p class="p">💬 <strong>今日互动</strong></p>
+
+<p class="p">你用过DeepSpeed或者其他分布式训练框架吗？踩过什么坑？评论区聊聊。</p>
+
+<p class="p">👇 点击「在看」，让更多人看到这篇。</p>
+
+</section>
+  </div>
+</body>
+</html>

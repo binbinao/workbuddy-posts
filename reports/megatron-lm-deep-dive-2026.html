@@ -1,0 +1,215 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Megatron-LM：NVIDIA亲儿子，大模型训练的性能怪兽</title>
+</head>
+<body style="padding: 24px; background: #ffffff; max-width: 860px; margin: 0 auto; font-family: -apple-system-font,BlinkMacSystemFont, Helvetica Neue, PingFang SC, Hiragino Sans GB , Microsoft YaHei UI , Microsoft YaHei ,Arial,sans-serif; font-size: 16px; line-height: 1.75; text-align: left;">
+  <div id="output">
+<section class="container" style="font-family: -apple-system-font,BlinkMacSystemFont, Helvetica Neue, PingFang SC, Hiragino Sans GB , Microsoft YaHei UI , Microsoft YaHei ,Arial,sans-serif; font-size: 16px; line-height: 1.75; text-align: left;">
+
+<blockquote style="margin: 1.5em 0; padding: 15px 20px; background: #f7f7f7; border-left: 4px solid #07c160; border-radius: 4px; color: #555; font-size: 15px;">如果DeepSpeed是省钱的艺术，那Megatron-LM就是砸钱的学问——在你已经有一堆GPU的前提下，怎么把它们榨到一滴不剩。</blockquote>
+
+<h2 style="padding: 0.3em 1em; border-radius: 8px; font-size: calc(16px * 1.3); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">先说个背景</h2>
+
+<p>上一篇我们聊了DeepSpeed，它的核心卖点是"用更少的资源训练更大的模型"。但如果你不差GPU呢？如果你手上有几百张甚至几千张A100/H100，你最关心的就不是"能不能训"，而是"训得够不够快"。</p>
+
+<p>这时候就该Megatron-LM上场了。</p>
+
+<p>Megatron-LM是NVIDIA自家搞的大模型训练框架，2019年发布第一版。名字来自变形金刚里的反派头子——威震天。NVIDIA给它起这个名字，大概是想说：我就是大模型训练的霸主。</p>
+
+<p>嚣张？确实。但人家有嚣张的资本。GPT-3、BLOOM、MT-NLG（530B）、Llama系列，这些响当当的大模型背后，要么直接用了Megatron-LM，要么用了它和DeepSpeed的混血版本。在大模型训练这条赛道上，<strong>Megatron-LM是绕不开的存在。</strong></p>
+
+<hr style="height: 1px; border: none; margin: 2em 0; background: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0));">
+
+<h2 style="padding: 0.3em 1em; border-radius: 8px; font-size: calc(16px * 1.3); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">Megatron-LM的核心哲学</h2>
+
+<p>DeepSpeed的哲学是"省"——把显存用到极致，让小集群也能训大模型。Megatron-LM的哲学正好反过来，是"快"——假设你有足够的GPU，怎么让它们全力运转，不浪费一个时钟周期。</p>
+
+<p>这两种哲学不矛盾，甚至经常配合使用。但出发点不同，导致它们在技术路线上走出了很不一样的路。</p>
+
+<p>Megatron-LM的核心武器是对Transformer结构的深度定制。它不是一个通用的"外挂"，而是把Transformer的每一层掰开了、揉碎了，重新设计了计算和通信方式。你想用Megatron-LM，就得按照它的规矩来。灵活性差了，但换来的是极致的性能。</p>
+
+<hr style="height: 1px; border: none; margin: 2em 0; background: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0));">
+
+<h2 style="padding: 0.3em 1em; border-radius: 8px; font-size: calc(16px * 1.3); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">张量并行：Megatron-LM的看家本领</h2>
+
+<p>张量并行（Tensor Parallelism, TP）是Megatron-LM最核心的技术，也是它和其他框架拉开差距的地方。</p>
+
+<h3 style="font-size: calc(16px * 1.1); margin: 1.5em 0 0.8em; padding-left: 10px; border-left: 3px solid #07c160;">矩阵怎么切</h3>
+
+<p>Transformer里面到处都是矩阵乘法。一个MLP层就是两个大矩阵乘，一个Self-Attention层也是一堆矩阵乘。张量并行的做法是：把这些矩阵切开，分给不同的GPU算。</p>
+
+<p>问题是，矩阵可以沿行切，也可以沿列切。切法不同，后续的通信方式完全不一样。Megatron-LM在这里做了一个非常精巧的设计。</p>
+
+<p>拿MLP层举例。一个标准的MLP长这样：</p>
+
+<pre style="background: #1e1e1e; color: #d4d4d4; padding: 16px 20px; border-radius: 8px; font-size: 14px; line-height: 1.6; overflow-x: auto; margin: 1em 0;"><code style="font-family: 'SF Mono', Menlo, Consolas, monospace;">Y = GeLU(X × A) × B</code></pre>
+
+<p>X是输入，A和B是两个权重矩阵。Megatron-LM把A沿列切，B沿行切。为什么这么切？因为这样一来：</p>
+
+<p>第一步，X乘以A的各列分片，每张GPU独立算，不需要通信。GeLU激活函数也是逐元素操作，同样不需要通信。</p>
+
+<p>第二步，用切好的中间结果乘以B的行分片，算出局部结果。</p>
+
+<p>第三步，做一次All-Reduce，把各GPU的局部结果加起来，得到完整的输出。</p>
+
+<p><strong>整个MLP层只需要一次All-Reduce通信。</strong>如果你反过来切，比如A沿行切，那在GeLU之前就得做一次All-Gather把中间结果拼起来，否则GeLU的结果就是错的。多一次通信，性能就差一截。</p>
+
+<p>这就是Megatron-LM的"列并行→行并行三明治"结构。看起来是个小trick，但在千卡集群上，少一次通信就是实打实的训练速度提升。</p>
+
+<h3 style="font-size: calc(16px * 1.1); margin: 1.5em 0 0.8em; padding-left: 10px; border-left: 3px solid #07c160;">Self-Attention怎么切</h3>
+
+<p>Self-Attention层的切法类似但稍复杂。Q、K、V三个投影矩阵沿列切，每张GPU只管一部分注意力头（attention heads）。由于多头注意力本身就是独立计算的，各GPU算完自己负责的几个头之后，在输出投影的时候做一次All-Reduce就行。</p>
+
+<p>同样是一个Transformer层只需要两次All-Reduce（MLP一次，Attention一次）。</p>
+
+<h3 style="font-size: calc(16px * 1.1); margin: 1.5em 0 0.8em; padding-left: 10px; border-left: 3px solid #07c160;">为什么只能在机器内部用</h3>
+
+<p>张量并行的通信量跟隐藏层维度成正比，而且每一层都要通信。在同一台机器内部，GPU之间走NVLink（双向带宽600-900 GB/s），这点通信量不算什么。但如果跨机器，走InfiniBand或者以太网（带宽通常只有几十到几百GB/s），通信延迟就会成为瓶颈。</p>
+
+<p>所以实际使用中，张量并行度通常等于单台机器内的GPU数量。一台DGX A100有8张卡，那TP=8。不多也不少。</p>
+
+<hr style="height: 1px; border: none; margin: 2em 0; background: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0));">
+
+<h2 style="padding: 0.3em 1em; border-radius: 8px; font-size: calc(16px * 1.3); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">流水线并行：跨机器的接力赛</h2>
+
+<p>张量并行搞定了机器内部的并行，但大模型训练通常需要很多台机器。跨机器怎么办？Megatron-LM用的是流水线并行（Pipeline Parallelism, PP）。</p>
+
+<p>思路很简单：把模型按层切成几段，每段放在不同的机器上。数据从第一段流到最后一段，像工厂流水线一样。</p>
+
+<h3 style="font-size: calc(16px * 1.1); margin: 1.5em 0 0.8em; padding-left: 10px; border-left: 3px solid #07c160;">流水线气泡</h3>
+
+<p>流水线并行有个老大难问题——气泡（Bubble）。</p>
+
+<p>想象一条四段的流水线。当第一段在处理第二批数据的时候，第二段在处理第一批数据，第三段和第四段可能还在等。这些等待时间就是"气泡"，GPU在空转。</p>
+
+<p>气泡比例大概是 (pp - 1) / (pp - 1 + m)，其中pp是流水线段数，m是micro-batch数量。pp = 4的时候，如果m也只有4，<strong>气泡比例是43%——将近一半的时间在空转。</strong></p>
+
+<h3 style="font-size: calc(16px * 1.1); margin: 1.5em 0 0.8em; padding-left: 10px; border-left: 3px solid #07c160;">1F1B调度</h3>
+
+<p>Megatron-LM用的调度策略叫1F1B（One Forward, One Backward）。先做一批前向传播把流水线填满，然后交替执行一次前向、一次反向。</p>
+
+<p>跟最朴素的"先全做完前向，再全做完反向"比，1F1B的好处是不需要同时保存所有micro-batch的激活值，显存压力小很多。气泡比例没变，但显存需求从O(m)降到了O(1)。</p>
+
+<h3 style="font-size: calc(16px * 1.1); margin: 1.5em 0 0.8em; padding-left: 10px; border-left: 3px solid #07c160;">交错调度</h3>
+
+<p>Megatron-LM还搞了一个更激进的方案叫交错调度。每个GPU不是只负责连续的几层，而是负责多段不连续的层。比如一个32层的模型分给4张GPU，朴素做法是每张卡管8层连续的层。交错做法是每张卡管4组，每组2层，分散在模型的不同位置。</p>
+
+<p>好处是气泡更小了。代价是通信量增加——数据不再是只在相邻段之间传递，可能要跳着传。</p>
+
+<blockquote style="margin: 1.5em 0; padding: 15px 20px; background: #f7f7f7; border-left: 4px solid #07c160; border-radius: 4px; color: #555; font-size: 15px;">论文数据：交错调度在pp=4的时候，可以把气泡从43%降到大约12%。提升相当明显。</blockquote>
+
+<hr style="height: 1px; border: none; margin: 2em 0; background: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0));">
+
+<h2 style="padding: 0.3em 1em; border-radius: 8px; font-size: calc(16px * 1.3); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">序列并行和上下文并行：处理超长序列</h2>
+
+<p>随着大模型越来越喜欢处理长文本（32K、128K甚至更长），序列长度带来的显存压力成了新问题。Megatron-LM为此搞了两种并行策略。</p>
+
+<h3 style="font-size: calc(16px * 1.1); margin: 1.5em 0 0.8em; padding-left: 10px; border-left: 3px solid #07c160;">序列并行</h3>
+
+<p>张量并行把矩阵乘法切了，但Transformer里还有一些操作是"逐元素"的，比如LayerNorm和Dropout。这些操作不涉及矩阵乘法，张量并行管不到它们，每张GPU上都要存一份完整的激活值。</p>
+
+<p>序列并行的做法是：在这些逐元素操作上，沿序列维度切分。每张GPU只处理序列的一部分。这样激活值的显存占用也被切开了。</p>
+
+<h3 style="font-size: calc(16px * 1.1); margin: 1.5em 0 0.8em; padding-left: 10px; border-left: 3px solid #07c160;">上下文并行</h3>
+
+<p>上下文并行是2024年才加入Megatron-Core的新特性，专门对付超长序列。</p>
+
+<p>Self-Attention的计算量和显存占用跟序列长度的平方成正比。序列一长，Attention就成了瓶颈。</p>
+
+<p>上下文并行直接在Attention计算上沿序列维度切。每张GPU只负责一部分序列的Attention计算，通过Ring Attention（环形注意力）的方式，把KV值在GPU之间循环传递，最终拼出完整的注意力输出。</p>
+
+<p>这让Megatron-LM能够处理百万级token长度的序列。</p>
+
+<hr style="height: 1px; border: none; margin: 2em 0; background: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0));">
+
+<h2 style="padding: 0.3em 1em; border-radius: 8px; font-size: calc(16px * 1.3); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">五种并行怎么组合</h2>
+
+<p>到这里你可能已经晕了。张量并行、流水线并行、数据并行、序列并行、上下文并行、专家并行……这么多并行策略，怎么组合？</p>
+
+<p>Megatron-LM的经典组合是这样的：</p>
+
+<p>机器内部（8张GPU）用张量并行，TP=8。每台机器之间用流水线并行，PP看模型层数和机器数量来定。在此基础上叠加数据并行，DP = 总GPU数 / (TP × PP)。</p>
+
+<p>如果序列很长，再开上下文并行。如果是MoE模型，再加专家并行。</p>
+
+<p>举个实际例子：用2048张H100训练一个万亿参数的模型。</p>
+
+<p style="padding-left: 1.5em;">• 每台机器8张H100，TP=8<br>• 64台机器分成8段流水线，PP=8<br>• 每段流水线有8台机器，DP = 2048 / 8 / 8 = 32</p>
+
+<p>每种并行各司其职。这个组合方案不是拍脑袋定的。Megatron-LM的第二篇论文专门做了大量实验，量化分析了TP、PP、DP不同配比下的吞吐量变化。</p>
+
+<hr style="height: 1px; border: none; margin: 2em 0; background: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0));">
+
+<h2 style="padding: 0.3em 1em; border-radius: 8px; font-size: calc(16px * 1.3); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">性能到底有多强</h2>
+
+<p>衡量大模型训练效率有一个常用指标叫MFU（Model FLOPs Utilization，模型浮点运算利用率）。理论上GPU每秒能算X次浮点运算，实际训练中能用到多少，就是MFU。</p>
+
+<p>Megatron-LM在大规模训练中能做到40%-60%的MFU。听起来不高？考虑到分布式训练中大量的通信开销、内存管理开销、流水线气泡等等，能到50%以上已经相当强了。</p>
+
+<p>具体数字：<strong>在3072张A100上训练一万亿参数的模型，达到了163 TFLOPs/GPU（BF16）。</strong>A100的BF16理论峰值是312 TFLOPs，MFU大约52%。在同等配置下，Megatron-LM的吞吐量通常比DeepSpeed高出不少。</p>
+
+<hr style="height: 1px; border: none; margin: 2em 0; background: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0));">
+
+<h2 style="padding: 0.3em 1em; border-radius: 8px; font-size: calc(16px * 1.3); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">和DeepSpeed的恩怨情仇</h2>
+
+<p>Megatron-LM和DeepSpeed的关系很微妙。竞争是肯定的——两家都想做大模型训练的标准框架。但合作也是真实的——很多顶级大模型是用Megatron-DeepSpeed混合方案训练的。</p>
+
+<p>分工大致是：Megatron-LM负责张量并行和流水线并行（这两块它确实做得更好），DeepSpeed负责ZeRO内存优化和Offload（这是它的强项）。两者组合起来，取长补短。</p>
+
+<p>但近两年情况在变。Megatron-Core越来越完善，自己也在做分布式优化器、激活值重计算等功能，跟DeepSpeed的功能越来越重叠。而PyTorch原生的FSDP也在不断追赶。三家的竞争在加剧。</p>
+
+<p>从用户角度看，一个尴尬的现实是：你往往需要同时了解这三套东西，才能给自己的场景找到最优方案。</p>
+
+<hr style="height: 1px; border: none; margin: 2em 0; background: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0));">
+
+<h2 style="padding: 0.3em 1em; border-radius: 8px; font-size: calc(16px * 1.3); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">上手门槛</h2>
+
+<p>得说实话：Megatron-LM的上手门槛比DeepSpeed高不少。</p>
+
+<p>DeepSpeed是"外挂"——你的PyTorch代码不用大改，加几行配置就能跑。Megatron-LM不是。它有自己的一套模型定义方式、数据加载方式、训练循环。你要用它，基本得按照它的代码结构来组织你的项目。</p>
+
+<p>好消息是Megatron-Core的出现改善了这个问题。它把核心的并行计算逻辑抽成了一个独立的库，你可以把它当组件用。HuggingFace的Accelerate和NVIDIA的NeMo框架都在往Megatron-Core上靠。</p>
+
+<p>坏消息是文档……怎么说呢，NVIDIA的工程能力一流，文档能力一言难尽。很多配置参数的含义和最佳实践，你得去翻论文、翻源码、翻GitHub Issues。社区里流传着一句话："Megatron-LM的文档就是它的源码。"</p>
+
+<p>另一个门槛是硬件。Megatron-LM是NVIDIA的亲儿子，对N卡的优化做到了极致，但对其他硬件的支持几乎为零。你手上的卡如果不是A100/H100/H200，体验会打很大折扣。</p>
+
+<hr style="height: 1px; border: none; margin: 2em 0; background: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0));">
+
+<h2 style="padding: 0.3em 1em; border-radius: 8px; font-size: calc(16px * 1.3); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">几个容易踩的坑</h2>
+
+<p>环境配置是第一关。Megatron-LM对CUDA版本、NCCL版本、PyTorch版本都有严格要求。最稳妥的方式是直接用NVIDIA NGC上的Docker镜像，别自己折腾环境。</p>
+
+<p>数据预处理也容易卡人。Megatron-LM用的是自己的二进制数据格式（.bin + .idx），不是直接读文本文件。你需要先跑一遍数据预处理脚本把数据转成它要的格式。这步出错的话后面训练会莫名其妙地崩。</p>
+
+<p>并行配置的调优是个技术活。TP、PP、DP的配比选不好，性能可以差好几倍。论文给了一些指导原则，但具体到你的模型和硬件配置，还是得自己跑benchmark摸索。</p>
+
+<p>checkpoint格式也是个问题。Megatron-LM存的checkpoint和HuggingFace格式不兼容，来回转换需要额外的脚本。社区有一些转换工具，但不同版本之间可能不通用。</p>
+
+<hr style="height: 1px; border: none; margin: 2em 0; background: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0));">
+
+<h2 style="padding: 0.3em 1em; border-radius: 8px; font-size: calc(16px * 1.3); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">写在最后</h2>
+
+<p>聊到这里，Megatron-LM和DeepSpeed的定位应该挺清楚了。一个拼性能，一个拼省钱。手上有DGX集群、追求最大训练吞吐量的，Megatron-LM或Megatron-Core是首选。硬件资源有限、想快速上手的，DeepSpeed+HuggingFace更现实。</p>
+
+<p>不过最现实的情况是：你两个都得学。在真正的大模型训练中，Megatron-DeepSpeed的组合方案目前仍然是效果最好的。</p>
+
+<blockquote style="margin: 1.5em 0; padding: 15px 20px; background: #f7f7f7; border-left: 4px solid #07c160; border-radius: 4px; color: #555; font-size: 15px;">一个给新手的建议：先从NeMo框架入手。NeMo底层就是Megatron-Core，但封装得更友好。等你对分布式训练有了感觉，再去啃Megatron-Core的源码不迟。</blockquote>
+
+<p>大模型训练这碗饭，门槛确实高。但换个角度想，门槛高也意味着——会的人少，值钱。</p>
+
+<hr style="height: 1px; border: none; margin: 2em 0; background: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0));">
+
+<p>💬 <strong>今日互动</strong></p>
+
+<p>你在训练大模型的时候用的什么框架？踩过什么坑？评论区聊聊。</p>
+
+<p>👇 点击「在看」，让更多人看到这篇。</p>
+
+</section>
+  </div>
+</body>
+</html>
