@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vosgien 博士论文结构化摘要 — DASIF · Summarize 技能版</title>
+    <style>
+        :root {
+            --bg: #0a0e1a;
+            --card: #111827;
+            --card-alt: #0f172a;
+            --border: #1e293b;
+            --accent: #3b82f6;
+            --teal: #14b8a6;
+            --amber: #f59e0b;
+            --purple: #a78bfa;
+            --red: #ef4444;
+            --green: #22c55e;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --text-dim: #64748b;
+            --code-bg: #1e293b;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: var(--bg); color: var(--text); line-height: 1.75; min-height: 100vh;
+        }
+        .container { max-width: 820px; margin: 0 auto; padding: 48px 20px 80px; }
+
+        /* Back link */
+        .back-link {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-size: 13px; color: var(--text-dim); text-decoration: none;
+            margin-bottom: 24px; transition: color 0.2s;
+        }
+        .back-link:hover { color: var(--accent); }
+
+        /* Header */
+        .header { margin-bottom: 40px; padding-bottom: 28px; border-bottom: 1px solid var(--border); }
+        .header .badge-row { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+        .badge {
+            display: inline-block; font-size: 10px; font-weight: 700;
+            padding: 3px 10px; border-radius: 6px; letter-spacing: 0.5px;
+        }
+        .badge.summary { color: var(--green); background: rgba(34,197,94,0.12); }
+        .badge.mbse { color: var(--purple); background: rgba(167,139,250,0.12); }
+        .badge.industry { color: var(--amber); background: rgba(245,158,11,0.12); }
+        .badge.crescendo { color: var(--accent); background: rgba(59,130,246,0.12); }
+        .badge.skill { color: var(--teal); background: rgba(20,184,166,0.12); }
+        .header h1 {
+            font-size: 28px; font-weight: 800; line-height: 1.3; margin-bottom: 12px;
+            background: linear-gradient(135deg, #e2e8f0, #94a3b8);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .header .subtitle {
+            font-size: 14px; color: var(--text-dim); line-height: 1.6;
+            border-left: 3px solid var(--teal); padding-left: 12px; margin-top: 8px;
+        }
+        .meta-row {
+            display: flex; gap: 16px; margin-top: 14px; font-size: 12px; color: var(--text-dim);
+            flex-wrap: wrap;
+        }
+        .meta-row span { display: flex; align-items: center; gap: 4px; }
+
+        /* TOC */
+        .toc {
+            background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+            padding: 20px 24px; margin-bottom: 40px;
+        }
+        .toc-title {
+            font-size: 13px; font-weight: 700; letter-spacing: 1px;
+            color: var(--text-dim); margin-bottom: 12px; text-transform: uppercase;
+        }
+        .toc ol { padding-left: 20px; }
+        .toc li { margin-bottom: 6px; }
+        .toc a {
+            font-size: 14px; color: var(--text-muted); text-decoration: none;
+            transition: color 0.2s;
+        }
+        .toc a:hover { color: var(--accent); }
+
+        /* Sections */
+        h2 {
+            font-size: 22px; font-weight: 800; margin-top: 48px; margin-bottom: 16px;
+            padding-bottom: 10px; border-bottom: 1px solid var(--border); color: #f1f5f9;
+        }
+        h3 {
+            font-size: 17px; font-weight: 700; margin-top: 28px; margin-bottom: 10px;
+            color: var(--teal);
+        }
+        p { margin-bottom: 14px; font-size: 15px; color: var(--text); }
+
+        /* Lists */
+        ul, ol { margin: 10px 0 14px 24px; }
+        li { margin-bottom: 6px; font-size: 15px; }
+        li strong { color: #f1f5f9; }
+
+        /* Blockquote / Insight */
+        .one-liner {
+            background: linear-gradient(135deg, rgba(34,197,94,0.1), rgba(20,184,166,0.06));
+            border: 1px solid rgba(34,197,94,0.25); border-radius: 12px;
+            padding: 20px 24px; margin: 24px 0;
+        }
+        .one-liner .label {
+            font-size: 11px; font-weight: 700; letter-spacing: 1px;
+            color: var(--green); text-transform: uppercase; margin-bottom: 8px;
+        }
+        .one-liner p { font-size: 16px; font-weight: 600; margin-bottom: 0; color: #f1f5f9; }
+
+        .insight-box {
+            background: linear-gradient(135deg, rgba(20,184,166,0.08), rgba(59,130,246,0.06));
+            border: 1px solid rgba(20,184,166,0.2); border-radius: 12px;
+            padding: 18px 22px; margin: 20px 0;
+        }
+        .insight-box .insight-label {
+            font-size: 11px; font-weight: 700; letter-spacing: 1px;
+            color: var(--teal); text-transform: uppercase; margin-bottom: 8px;
+        }
+        .insight-box p { font-size: 14px; margin-bottom: 0; }
+
+        /* Tables */
+        .table-wrap { overflow-x: auto; margin: 14px 0; }
+        table {
+            width: 100%; border-collapse: collapse; font-size: 14px;
+            background: var(--card); border-radius: 10px; overflow: hidden;
+        }
+        th {
+            background: rgba(59,130,246,0.08); color: var(--accent); font-weight: 600;
+            text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border);
+            font-size: 13px;
+        }
+        td {
+            padding: 9px 14px; border-bottom: 1px solid rgba(30,41,59,0.5);
+            color: var(--text-muted);
+        }
+        td strong { color: var(--text); }
+        tr:last-child td { border-bottom: none; }
+
+        /* Key point cards */
+        .key-point {
+            background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+            padding: 20px 24px; margin: 16px 0; border-left: 3px solid var(--accent);
+        }
+        .key-point .kp-num {
+            display: inline-block; font-size: 12px; font-weight: 700;
+            color: var(--accent); margin-bottom: 8px; letter-spacing: 0.5px;
+        }
+        .key-point h4 {
+            font-size: 16px; font-weight: 700; color: #f1f5f9; margin-bottom: 10px;
+        }
+        .key-point .kp-row {
+            display: flex; gap: 8px; align-items: flex-start; margin-bottom: 6px; font-size: 14px;
+        }
+        .kp-tag {
+            display: inline-block; font-size: 10px; font-weight: 700; padding: 1px 6px;
+            border-radius: 4px; flex-shrink: 0; margin-top: 2px;
+        }
+        .kp-tag.view { color: var(--teal); background: rgba(20,184,166,0.12); }
+        .kp-tag.evidence { color: var(--amber); background: rgba(245,158,11,0.12); }
+        .kp-tag.impact { color: var(--purple); background: rgba(167,139,250,0.12); }
+
+        /* Conclusion section */
+        .conclusion-card {
+            background: var(--card-alt); border: 1px solid var(--border); border-radius: 12px;
+            padding: 20px 24px; margin: 16px 0;
+        }
+        .conclusion-card h4 {
+            font-size: 14px; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;
+        }
+        .conclusion-card h4 .icon { font-size: 16px; }
+
+        /* Footer */
+        .footer { text-align: center; padding-top: 40px; border-top: 1px solid var(--border); margin-top: 48px; }
+        .footer p { font-size: 12px; color: var(--text-dim); }
+
+        @media (max-width: 600px) {
+            .container { padding: 24px 16px 60px; }
+            h1 { font-size: 22px !important; }
+            h2 { font-size: 18px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="../index.html" class="back-link">← 返回首页</a>
+
+        <div class="header">
+            <div class="badge-row">
+                <span class="badge summary">SUMMARIZE</span>
+                <span class="badge skill">SKILL 生成</span>
+                <span class="badge mbse">MBSE</span>
+                <span class="badge industry">INDUSTRIAL SOFTWARE</span>
+                <span class="badge crescendo">CRESCENDO EU FP7</span>
+            </div>
+            <h1>Vosgien 博士论文结构化摘要<br>DASIF 与设计-分析数据集成</h1>
+            <div class="subtitle">
+                Thomas Vosgien — <em>Model-Based System Engineering enabling Design-Analysis Data Integration in Digital Design Environments</em><br>
+                Application to collaborative aeronautics simulation-based design process and turbojet integration studies
+            </div>
+            <div class="meta-row">
+                <span>🏫 École Centrale Paris</span>
+                <span>📅 2015</span>
+                <span>📄 407页</span>
+                <span>🇪🇺 CRESCENDO FP7-234344</span>
+                <span>🏭 Snecma / SAFRAN</span>
+                <span>🤖 Summarize Skill v2026.5.29</span>
+            </div>
+        </div>
+
+        <!-- TOC -->
+        <div class="toc">
+            <div class="toc-title">📋 目录</div>
+            <ol>
+                <li><a href="#one-liner">一句话结论</a></li>
+                <li><a href="#exec-summary">执行摘要</a></li>
+                <li><a href="#key-points">五大核心要点</a></li>
+                <li><a href="#chapter-summary">章节摘要</a></li>
+                <li><a href="#key-data">关键数据</a></li>
+                <li><a href="#conclusions">结论与启示</a></li>
+                <li><a href="#reading-list">推荐阅读</a></li>
+            </ol>
+        </div>
+
+        <!-- 1. 一句话结论 -->
+        <h2 id="one-liner">一、一句话结论</h2>
+        <div class="one-liner">
+            <div class="label">🎯 Core Thesis</div>
+            <p>DASIF 是第一个将 MBSE 系统建模能力嵌入 PDM/SLM 环境的设计-分析集成框架，通过"参照 DMU → 下游 DMU → 行为 MU"的递进式产品视图变换，实现了 CAD 几何定义与 CAE 仿真模型之间的双向可追溯互联。</p>
+        </div>
+
+        <!-- 2. 执行摘要 -->
+        <h2 id="exec-summary">二、执行摘要</h2>
+        <p>航空复杂产品（如涡扇发动机）的开发过程中，设计团队与仿真分析团队之间长期存在数据断层：DMU 只承载几何信息，无法直接服务于有限元分析，而分析模型又脱离产品定义基准。</p>
+        <p>Vosgien 在 CRESCENDO EU FP7 项目框架下，以 Snecma（赛峰集团）的涡扇发动机集成场景为工业背景，提出 <strong>DASIF（Design-Analysis System Integration Framework）</strong>。DASIF 的核心创新是三层架构——将 MBSE 的系统建模能力（SysML 扩展 + 面向对象接口定义）嵌入 PDM 的配置管理能力中，并通过语义映射层实现异构 PLM/SLM 系统间的互操作。</p>
+        <p>论文建立了完整的概念数据模型（系统定义层 → 拓扑层 → 配置管理层），在 CATIA/SIMULIA V6 和 Teamcenter for Simulation 9 上开发原型进行验证，并将 DASIF 数据模型贡献给 BDA Business Object Model（CRESCENDO 项目的标准化数据交换模型）。主要成果包括：FE 模型自动化装配、CAD-CAE 数据链全链追溯、基于仿真意图的适配网格重用。</p>
+
+        <!-- 3. 五大核心要点 -->
+        <h2 id="key-points">三、五大核心要点</h2>
+
+        <div class="key-point">
+            <div class="kp-num">要点 1</div>
+            <h4>设计-分析数据断层是航空工业的核心痛点</h4>
+            <div class="kp-row"><span class="kp-tag view">观点</span> <span>DMU 仅是几何参考，无法直接驱动 FEA；分析人员 60-80% 的时间花在数据准备而非物理分析上</span></div>
+            <div class="kp-row"><span class="kp-tag evidence">证据</span> <span>Snecma VSM（价值流图）量化分析显示，设计-分析迭代中非增值活动占比极高</span></div>
+            <div class="kp-row"><span class="kp-tag impact">意义</span> <span>这是精益产品开发（Lean PD）视角下仿真驱动设计的核心瓶颈</span></div>
+        </div>
+
+        <div class="key-point">
+            <div class="kp-num">要点 2</div>
+            <h4>RDMU → DDMU → BMU：递进式产品视图变换是 DASIF 的方法论核心</h4>
+            <div class="kp-row"><span class="kp-tag view">观点</span> <span>Referential DMU（参照 DMU）是唯一权威产品定义源；Downstream DMU（下游 DMU）是面向特定仿真域的适配视图；Behavioural Mock-Up（BMU）是承载行为/仿真模型的系统架构</span></div>
+            <div class="kp-row"><span class="kp-tag evidence">证据</span> <span>定义了从 RDMU 生成 DDMU 的三类变换条件（结构变换、形态变换、简化变换）</span></div>
+            <div class="kp-row"><span class="kp-tag impact">意义</span> <span>解决了"一个产品定义服务多个仿真场景"的配置管理难题</span></div>
+        </div>
+
+        <div class="key-point">
+            <div class="kp-num">要点 3</div>
+            <h4>面向对象接口建模是连接 CAD 几何与 CAE 仿真的关键桥梁</h4>
+            <div class="kp-row"><span class="kp-tag view">观点</span> <span>传统 DMU 缺乏接口对象的显式描述；DASIF 引入 Interface Specification / Interface Connection / Interface Connector 概念，将组件间连接关系从隐式几何约束提升为可复用的系统级对象</span></div>
+            <div class="kp-row"><span class="kp-tag evidence">证据</span> <span>在原型中通过 CATIA V6 的 Publication 机制 + 系统建模框架实现接口定义封装与 FE 模型自动装配</span></div>
+            <div class="kp-row"><span class="kp-tag impact">意义</span> <span>接口复用率直接决定 FE 装配自动化程度，是 DASIF 可操作性的关键</span></div>
+        </div>
+
+        <div class="key-point">
+            <div class="kp-num">要点 4</div>
+            <h4>三层概念数据模型实现了"定义-拓扑-配置"的解耦与整合</h4>
+            <div class="kp-row"><span class="kp-tag view">观点</span> <span>系统定义层（System Artefact → Functional / Design / Behavioural 三类制品）→ 拓扑层（CAD 拓扑 B-Rep ↔ FE 拓扑 节点/单元）→ 配置管理层（多视图 effectivity + 工程变更传播）</span></div>
+            <div class="kp-row"><span class="kp-tag evidence">证据</span> <span>数据模型基于 STEP AP203/AP209/AP233/AP239 + NIST Core Product Model + OAM 的整合与扩展</span></div>
+            <div class="kp-row"><span class="kp-tag impact">意义</span> <span>为 PLM/SLM 系统的互操作提供了标准化的信息模型基础</span></div>
+        </div>
+
+        <div class="key-point">
+            <div class="kp-num">要点 5</div>
+            <h4>BDA Business Object Model 是 DASIF 从学术框架走向工业标准的通道</h4>
+            <div class="kp-row"><span class="kp-tag view">观点</span> <span>DASIF 的数据模型贡献了 BDA BOM 中缺失的仿真数据管理概念；BDA 平台作为"中立数据交换枢纽"实现了异构 PLM/SLM 系统间的语义映射</span></div>
+            <div class="kp-row"><span class="kp-tag evidence">证据</span> <span>Product Integration Scenario 中成功演示了基于 AP233/SysML 的系统架构跨平台交换</span></div>
+            <div class="kp-row"><span class="kp-tag impact">意义</span> <span>但 AP233 无法覆盖仿真数据管理需求，需要 AP209 补充——这是当前标准体系的一个缺口</span></div>
+        </div>
+
+        <!-- 4. 章节摘要 -->
+        <h2 id="chapter-summary">四、章节摘要</h2>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>章节</th><th>核心结论</th><th>关键发现</th></tr></thead>
+                <tbody>
+                    <tr><td><strong>Ch1</strong> General Introduction</td><td>航空复杂产品开发需要集成化仿真驱动设计方法</td><td>研究方法论：Lean-6σ（DMAIC）+ 工业验证</td></tr>
+                    <tr><td><strong>Ch2</strong> Industrial context</td><td>航空业协作 PDP 中设计-分析迭代是主要效率瓶颈</td><td>涡扇发动机 IPPS 开发涉及多域/多级/多伙伴耦合</td></tr>
+                    <tr><td><strong>Ch3</strong> Digital design environments</td><td>DMU 是当前产品定义的核心枢纽，但与仿真数据脱节</td><td>数字集成链中 FE 装配模型的手工创建是主要浪费源</td></tr>
+                    <tr><td><strong>Ch4</strong> Key technical requirements</td><td>三类关键需求：DMU→CAD-FEA 集成、系统架构 OO 建模、多视图信息结构</td><td>12 项详细技术需求条目</td></tr>
+                    <tr><td><strong>Ch5</strong> Scientific positioning</td><td>Lean PD 视角下，设计-分析之间的价值缺口需要系统性方法填补</td><td>FBS 框架揭示了"定义视图"缺失是核心问题</td></tr>
+                    <tr><td><strong>Ch6</strong> MBSE methodologies</td><td>SysML + MBSE 方法可提供系统级建模能力，但缺乏与 PDM 的集成</td><td>Arcadia/Capella、SysML 工具链的局限性分析</td></tr>
+                    <tr><td><strong>Ch7</strong> DMU as backbone</td><td>DMU 必须从静态几何参考演进为多视图、行为增强的产品定义</td><td>RDMU 概念的初步定义</td></tr>
+                    <tr><td><strong>Ch8</strong> Product data models & standards</td><td>现有标准（STEP 系列、NIST 模型）各有覆盖但均不完整</td><td>AP233 覆盖 SysML，AP209 覆盖 FEA，但无统一模型</td></tr>
+                    <tr><td><strong>Ch9</strong> Lean-6σ methodology</td><td>DMAIC 方法论为 DASIF 的需求分析和设计提供了结构化路径</td><td>Define → Measure → Analyze → Design → Verify 五阶段</td></tr>
+                    <tr><td><strong>Ch10</strong> DASIF framework</td><td><strong>核心贡献</strong>：完整的 DASIF 功能分解 + RDMU/DDMU/BMU 方法论 + 接口建模 + 语义映射</td><td>SADT/IDEF0 功能分析；6 大能力域定义</td></tr>
+                    <tr><td><strong>Ch11</strong> Conceptual data model</td><td>三层数据模型（系统定义→拓扑→配置管理）是 DASIF 的信息架构基础</td><td>基于 UML 的完整类图定义</td></tr>
+                    <tr><td><strong>Ch12</strong> Prototype</td><td>Java + PostgreSQL 原型验证了 DASIF 核心概念的可行性</td><td>自动生成关系数据库 + GUI 原型</td></tr>
+                    <tr><td><strong>Ch13</strong> Commercial tool validation</td><td>CATIA/SIMULIA V6 和 TcS 9 原型验证了工业可行性，但暴露商业工具局限</td><td>自动 FE 装配 + CAD-CAE 追溯 + 网格复用演示成功</td></tr>
+                    <tr><td><strong>Ch14</strong> Results assessment</td><td>商业工具成熟度不足以支撑 DASIF 全部概念，但核心功能已验证</td><td>Gap analysis 矩阵 + 评估矩阵</td></tr>
+                    <tr><td><strong>Ch15</strong> Conclusions & future work</td><td>DASIF 是 MBSE→PLM 集成的关键一步；宏观+微观方法需结合</td><td>未来方向：SDM 完整实现、多物理耦合、BDA 标准演进</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 5. 关键数据 -->
+        <h2 id="key-data">五、关键数据</h2>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>指标</th><th>数值</th><th>说明</th></tr></thead>
+                <tbody>
+                    <tr><td>论文总页数</td><td><strong>407</strong></td><td>含前置页、参考文献和附录</td></tr>
+                    <tr><td>DASIF 功能分解层级</td><td><strong>A1 → A11-A15 + A3</strong></td><td>SADT/IDEF0 三层分解</td></tr>
+                    <tr><td>数据模型层次</td><td><strong>3 层</strong></td><td>系统定义层 + 拓扑层 + 配置管理层</td></tr>
+                    <tr><td>验证原型平台</td><td><strong>2 套</strong></td><td>CATIA/SIMULIA V6 + Teamcenter for Simulation 9</td></tr>
+                    <tr><td>主要引用标准</td><td><strong>STEP AP203/209/233/239 + NIST CPM/OAM</strong></td><td>数据模型基础</td></tr>
+                    <tr><td>CRESCENDO 项目编号</td><td><strong>EU FP7-234344</strong></td><td>2009.05–2012.10</td></tr>
+                    <tr><td>工业合作伙伴</td><td><strong>Snecma + Airbus + Dassault Systèmes + Siemens PLM</strong></td><td>Product Integration Scenario</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 6. 结论与启示 -->
+        <h2 id="conclusions">六、结论与启示</h2>
+
+        <div class="conclusion-card">
+            <h4><span class="icon">✅</span> 主要结论</h4>
+            <ol>
+                <li><strong>DASIF 证明了 MBSE 嵌入 PDM/SLM 是可行且有价值的</strong>——打破了"PLM 只管几何、SysML 只管逻辑"的传统分离</li>
+                <li><strong>RDMU → DDMU → BMU 递进式产品视图变换</strong>，为"一个产品定义服务多域仿真"提供了方法论和实现路径</li>
+                <li><strong>接口对象的显式建模与封装复用</strong>，是 FE 模型自动装配的关键使能器</li>
+                <li><strong>商业 PLM/SLM 工具对 DASIF 概念的支持仍有显著缺口</strong>（尤其 SDM 配置管理和多视图 effectivity）</li>
+            </ol>
+        </div>
+
+        <div class="conclusion-card">
+            <h4><span class="icon">🛠️</span> 实践建议</h4>
+            <ul>
+                <li><strong>工业软件厂商</strong>：DASIF 的三层数据模型可作为 SLM 功能演进的设计蓝图</li>
+                <li><strong>航空企业</strong>：RDMU/DDMU 方法论可直接应用于 PDP 流程优化</li>
+                <li><strong>标准组织</strong>：AP233 + AP209 的整合是仿真数据互操作的迫切需求</li>
+            </ul>
+        </div>
+
+        <div class="conclusion-card">
+            <h4><span class="icon">⚠️</span> 局限性</h4>
+            <ul>
+                <li>原型验证仅覆盖结构力学 FEA，未扩展到气动/热力学等多物理域</li>
+                <li>BMU 配置管理（多保真度 FE 表示的 effectivity）概念已定义但未实现</li>
+                <li>语义映射仅在 BDA BOM 层面验证，更广泛的异构 PLM 互操作仍有挑战</li>
+                <li>缺乏"Beta-test"级别的用户评估和 VSM 量化效率验证</li>
+            </ul>
+        </div>
+
+        <div class="conclusion-card">
+            <h4><span class="icon">🔗</span> 与后续项目的关联</h4>
+            <ul>
+                <li><strong>CRESCENDO → MoSSEC</strong> (EU H2020)：DASIF 概念进一步发展为 MoSSEC 的仿真配置管理方法</li>
+                <li><strong>CRESCENDO → AGILE</strong> (EU H2020)：BDA BOM 概念扩展为 AGILE 的 MDAO 框架</li>
+                <li><strong>DASIF RDMU/DDMU</strong> → Siemens/Ansys 等商业 SLM 产品中的 "Simulation Context" 概念</li>
+            </ul>
+        </div>
+
+        <!-- 7. 推荐阅读 -->
+        <h2 id="reading-list">七、推荐阅读</h2>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>#</th><th>推荐文献</th><th>关联</th></tr></thead>
+                <tbody>
+                    <tr><td>1</td><td><strong>CRESCENDO D017 Final Report</strong></td><td>项目整体交付物，BDA 概念的完整定义</td></tr>
+                    <tr><td>2</td><td><strong>MoSSEC Project (EU H2020)</strong></td><td>DASIF 仿真配置管理思想的后续演进</td></tr>
+                    <tr><td>3</td><td><strong>ISO 10303 STEP AP209 Ed2</strong></td><td>有限元数据交换标准，DASIF 数据模型的关键基础</td></tr>
+                    <tr><td>4</td><td><strong>NIST Core Product Model / OAM</strong></td><td>DASIF 概念数据模型的理论源头</td></tr>
+                    <tr><td>5</td><td><strong>Vosgien et al., CIRP 2013</strong></td><td>论文核心思想的期刊发表版</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="insight-box">
+            <div class="insight-label">📝 关于本文</div>
+            <p>本文使用 <strong>Summarize Skill v2026.5.29</strong>（模板三：长篇内容）自动生成，遵循六维分析流程：主题识别 → 结构拆分 → 关键实体 → 核心观点 → 数据/事实 → 结论/行动项。</p>
+            <p style="margin-top:8px;">另见：<a href="vosgien-dasif-phd-deep-dive.html" style="color:var(--accent)">Vosgien 博士论文深度拆解</a>（手动分析版，含 ASCII 架构图和详细术语表）</p>
+        </div>
+
+        <div class="footer">
+            <p>结构化摘要 2026-06-25 · 由 Fiona 🦊 使用 Summarize Skill 生成与发布</p>
+        </div>
+    </div>
+</body>
+</html>
