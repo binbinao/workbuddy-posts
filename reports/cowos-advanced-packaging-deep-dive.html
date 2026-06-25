@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>十图看懂 CoWoS 先进封装 — AI 芯片的命门</title>
+    <style>
+        :root {
+            --bg: #0a0e1a;
+            --card: #111827;
+            --card-alt: #0f172a;
+            --border: #1e293b;
+            --accent: #3b82f6;
+            --teal: #14b8a6;
+            --amber: #f59e0b;
+            --purple: #a78bfa;
+            --red: #ef4444;
+            --green: #22c55e;
+            --orange: #f97316;
+            --cyan: #06b6d4;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --text-dim: #64748b;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: var(--bg); color: var(--text); line-height: 1.8; min-height: 100vh;
+        }
+        .container { max-width: 860px; margin: 0 auto; padding: 48px 20px 80px; }
+
+        .back-link {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-size: 13px; color: var(--text-dim); text-decoration: none;
+            margin-bottom: 24px; transition: color 0.2s;
+        }
+        .back-link:hover { color: var(--accent); }
+
+        /* Hero */
+        .hero { margin-bottom: 48px; padding-bottom: 32px; border-bottom: 1px solid var(--border); }
+        .hero .badge-row { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+        .badge {
+            display: inline-block; font-size: 10px; font-weight: 700;
+            padding: 3px 10px; border-radius: 6px; letter-spacing: 0.5px;
+        }
+        .badge.semi { color: var(--accent); background: rgba(59,130,246,0.12); }
+        .badge.ai { color: var(--teal); background: rgba(20,184,166,0.12); }
+        .badge.hbm { color: var(--amber); background: rgba(245,158,11,0.12); }
+        .badge.tsmc { color: var(--red); background: rgba(239,68,68,0.12); }
+        .badge.deep { color: var(--purple); background: rgba(167,139,250,0.12); }
+        .hero h1 {
+            font-size: 32px; font-weight: 800; line-height: 1.3; margin-bottom: 12px;
+            background: linear-gradient(135deg, #f1f5f9, #94a3b8);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .hero .subtitle { font-size: 16px; color: var(--text-muted); line-height: 1.7; }
+        .hero .meta-row { display: flex; gap: 16px; margin-top: 16px; font-size: 12px; color: var(--text-dim); }
+
+        /* Figure blocks — the "十图" */
+        .figure {
+            background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+            margin-bottom: 28px; overflow: hidden;
+        }
+        .figure-header {
+            display: flex; align-items: center; gap: 12px;
+            padding: 20px 24px 0;
+        }
+        .figure-num {
+            flex-shrink: 0; width: 36px; height: 36px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 10px; font-size: 15px; font-weight: 800;
+        }
+        .figure-num.n1 { background: rgba(59,130,246,0.15); color: var(--accent); }
+        .figure-num.n2 { background: rgba(20,184,166,0.15); color: var(--teal); }
+        .figure-num.n3 { background: rgba(245,158,11,0.15); color: var(--amber); }
+        .figure-num.n4 { background: rgba(167,139,250,0.15); color: var(--purple); }
+        .figure-num.n5 { background: rgba(239,68,68,0.15); color: var(--red); }
+        .figure-num.n6 { background: rgba(34,197,94,0.15); color: var(--green); }
+        .figure-num.n7 { background: rgba(249,115,22,0.15); color: var(--orange); }
+        .figure-num.n8 { background: rgba(6,182,212,0.15); color: var(--cyan); }
+        .figure-num.n9 { background: rgba(236,72,153,0.15); color: #ec4899; }
+        .figure-num.n10 { background: rgba(168,85,247,0.15); color: #a855f7; }
+        .figure-title { font-size: 17px; font-weight: 700; color: #f1f5f9; }
+        .figure-body { padding: 16px 24px 24px; }
+
+        /* Tables */
+        .fig-table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 12px 0; }
+        .fig-table th {
+            background: var(--card-alt); color: var(--text-muted); font-weight: 600;
+            text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border);
+            font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .fig-table td {
+            padding: 8px 12px; border-bottom: 1px solid rgba(30,41,59,0.6);
+            color: var(--text); vertical-align: top;
+        }
+        .fig-table tr:last-child td { border-bottom: none; }
+        .fig-table tr:hover td { background: rgba(59,130,246,0.04); }
+        .fig-table .hl { color: var(--accent); font-weight: 600; }
+        .fig-table .hl2 { color: var(--teal); font-weight: 600; }
+        .fig-table .hl3 { color: var(--amber); font-weight: 600; }
+        .fig-table .dim { color: var(--text-dim); font-size: 12px; }
+
+        /* Flow diagram */
+        .flow-row {
+            display: flex; align-items: center; justify-content: center;
+            gap: 6px; flex-wrap: wrap; margin: 16px 0; font-size: 13px;
+        }
+        .flow-box {
+            background: var(--card-alt); border: 1px solid var(--border); border-radius: 8px;
+            padding: 8px 14px; text-align: center; font-weight: 600;
+        }
+        .flow-box.accent { border-color: rgba(59,130,246,0.4); color: var(--accent); }
+        .flow-box.teal { border-color: rgba(20,184,166,0.4); color: var(--teal); }
+        .flow-box.amber { border-color: rgba(245,158,11,0.4); color: var(--amber); }
+        .flow-box.purple { border-color: rgba(167,139,250,0.4); color: var(--purple); }
+        .flow-box.red { border-color: rgba(239,68,68,0.4); color: var(--red); }
+        .flow-arrow { color: var(--text-dim); font-size: 16px; }
+
+        /* Paragraphs inside figures */
+        .fig-p { font-size: 14px; color: var(--text-muted); margin: 10px 0; line-height: 1.8; }
+        .fig-p strong { color: var(--text); }
+        .fig-p .em { color: var(--accent); font-weight: 600; }
+        .fig-p .em2 { color: var(--teal); font-weight: 600; }
+        .fig-p .em3 { color: var(--amber); font-weight: 600; }
+
+        /* Key metric box */
+        .metric-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 14px 0; }
+        .metric-box {
+            background: var(--card-alt); border: 1px solid var(--border); border-radius: 10px;
+            padding: 14px; text-align: center;
+        }
+        .metric-box .val { font-size: 22px; font-weight: 800; }
+        .metric-box .val.blue { color: var(--accent); }
+        .metric-box .val.teal { color: var(--teal); }
+        .metric-box .val.amber { color: var(--amber); }
+        .metric-box .val.red { color: var(--red); }
+        .metric-box .val.green { color: var(--green); }
+        .metric-box .val.purple { color: var(--purple); }
+        .metric-box .label { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+
+        /* Timeline */
+        .timeline { margin: 14px 0; padding-left: 20px; border-left: 2px solid var(--border); }
+        .timeline-item { position: relative; padding: 6px 0 14px 20px; }
+        .timeline-item::before {
+            content: ''; position: absolute; left: -7px; top: 12px;
+            width: 12px; height: 12px; border-radius: 50%; background: var(--accent);
+            border: 2px solid var(--bg);
+        }
+        .timeline-item .year { font-size: 13px; font-weight: 700; color: var(--accent); }
+        .timeline-item .desc { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+
+        /* Callout */
+        .callout {
+            background: rgba(59,130,246,0.06); border-left: 3px solid var(--accent);
+            border-radius: 0 8px 8px 0; padding: 14px 18px; margin: 14px 0;
+            font-size: 13px; color: var(--text-muted); line-height: 1.7;
+        }
+        .callout strong { color: var(--text); }
+        .callout.warn { background: rgba(245,158,11,0.06); border-left-color: var(--amber); }
+        .callout.key { background: rgba(20,184,166,0.06); border-left-color: var(--teal); }
+        .callout.red { background: rgba(239,68,68,0.06); border-left-color: var(--red); }
+
+        /* Bar chart */
+        .bar-chart { margin: 14px 0; }
+        .bar-row { display: flex; align-items: center; margin-bottom: 8px; font-size: 12px; }
+        .bar-label { width: 90px; text-align: right; padding-right: 10px; color: var(--text-muted); flex-shrink: 0; }
+        .bar-track { flex: 1; height: 22px; background: var(--card-alt); border-radius: 4px; overflow: hidden; position: relative; }
+        .bar-fill { height: 100%; border-radius: 4px; display: flex; align-items: center; padding-left: 8px; font-weight: 700; font-size: 11px; color: #fff; min-width: 30px; }
+        .bar-fill.blue { background: linear-gradient(90deg, #2563eb, #3b82f6); }
+        .bar-fill.teal { background: linear-gradient(90deg, #0d9488, #14b8a6); }
+        .bar-fill.amber { background: linear-gradient(90deg, #d97706, #f59e0b); }
+        .bar-fill.red { background: linear-gradient(90deg, #dc2626, #ef4444); }
+        .bar-fill.green { background: linear-gradient(90deg, #16a34a, #22c55e); }
+        .bar-fill.purple { background: linear-gradient(90deg, #7c3aed, #a78bfa); }
+
+        /* Section divider */
+        .divider { height: 1px; background: var(--border); margin: 8px 0 16px; }
+
+        /* Footer */
+        .footer { text-align: center; padding-top: 40px; border-top: 1px solid var(--border); }
+        .footer p { font-size: 12px; color: var(--text-dim); line-height: 1.8; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <a class="back-link" href="../index.html">← 返回首页</a>
+
+    <div class="hero">
+        <div class="badge-row">
+            <span class="badge semi">先进封装</span>
+            <span class="badge ai">AI 基础设施</span>
+            <span class="badge hbm">HBM</span>
+            <span class="badge tsmc">台积电</span>
+            <span class="badge deep">深度调研</span>
+        </div>
+        <h1>十图看懂 CoWoS 先进封装</h1>
+        <p class="subtitle">
+            很多人知道 AI 离不开 GPU，但很少有人意识到：<strong>卡住全球 AI 芯片出货的不是先进制程，而是先进封装</strong>。
+            CoWoS —— 台积电的 2.5D 封装技术，才是 AI 时代真正的"命门"。
+        </p>
+        <div class="meta-row">
+            <span>📅 2025.06</span>
+            <span>⏱ 阅读约 15 分钟</span>
+            <span>📊 数据截至 2026 Q2</span>
+        </div>
+    </div>
+
+    <!-- ===================== 图1：CoWoS 是什么 ===================== -->
+    <div class="figure">
+        <div class="figure-header">
+            <div class="figure-num n1">01</div>
+            <div class="figure-title">CoWoS 是什么？—— AI 芯片的"拼图台"</div>
+        </div>
+        <div class="figure-body">
+            <p class="fig-p">
+                <strong>CoWoS</strong>（Chip-on-Wafer-on-Substrate，芯片-晶圆-基板封装）是台积电 2011 年推出的 2.5D 先进封装平台。
+                核心思路：<span class="em">先把多颗芯片"拼"到硅中介层上，再把整块组装到基板上</span>。
+            </p>
+            <div class="flow-row">
+                <div class="flow-box accent">GPU Die</div>
+                <div class="flow-box accent">HBM ×8</div>
+                <div class="flow-arrow">↓ 微凸块</div>
+                <div class="flow-box teal">硅中介层（Interposer）</div>
+                <div class="flow-arrow">↓ TSV + C4</div>
+                <div class="flow-box amber">ABF 有机基板</div>
+                <div class="flow-arrow">↓ BGA</div>
+                <div class="flow-box purple">PCB 主板</div>
+            </div>
+            <p class="fig-p">
+                <strong>两步集成</strong>：<br>
+                ① <span class="em2">CoW</span> — 将 GPU + HBM 通过微凸块（节距 40→25→9 μm）键合到硅中介层晶圆<br>
+                ② <span class="em2">WoS</span> — 将 CoW 模组通过 TSV + C4 凸块焊接到有机基板
+            </p>
+            <p class="fig-p">
+                <strong>为什么 AI 离不开它？</strong> GPU 和 HBM 之间需要 <span class="em">>2 TB/s</span> 的带宽，传统封装的布线密度根本做不到。
+                只有硅中介层的亚微米 RDL 布线才能提供足够的互连密度。
+            </p>
+            <div class="callout key">
+                <strong>一句话理解</strong>：先进制程决定单颗芯片多快，先进封装决定多颗芯片能不能"合体"跑起来。CoWoS 就是让 GPU 和 HBM 紧密"合体"的关键技术。
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== 图2：三大分支 ===================== -->
+    <div class="figure">
+        <div class="figure-header">
+            <div class="figure-num n2">02</div>
+            <div class="figure-title">三大分支：CoWoS-S / R / L 演进路线</div>
+        </div>
+        <div class="figure-body">
+            <table class="fig-table">
+                <tr>
+                    <th>维度</th><th>CoWoS-S</th><th>CoWoS-R</th><th>CoWoS-L</th>
+                </tr>
+                <tr>
+                    <td><strong>中介层材料</strong></td>
+                    <td>完整硅晶圆</td>
+                    <td>有机聚合物 + 铜RDL</td>
+                    <td>LSI 硅桥 + 全局 RDL</td>
+                </tr>
+                <tr>
+                    <td><strong>中介层尺寸</strong></td>
+                    <td>3.3× 光罩（~2,700 mm²）</td>
+                    <td>1.5× 光罩</td>
+                    <td>已支持 >3.3× → 9× 光罩</td>
+                </tr>
+                <tr>
+                    <td><strong>RDL 线宽/间距</strong></td>
+                    <td class="hl">~0.4/0.5 μm</td>
+                    <td>2/4 μm</td>
+                    <td>硅桥区亚微米 / RDL 区 ~2 μm</td>
+                </tr>
+                <tr>
+                    <td><strong>成本</strong></td>
+                    <td>最高（整片硅中介层）</td>
+                    <td>最低</td>
+                    <td>中等（局部硅桥）</td>
+                </tr>
+                <tr>
+                    <td><strong>代表产品</strong></td>
+                    <td>H100/H200、MI300、TPU v4/v5</td>
+                    <td>AWS Trainium 早期版</td>
+                    <td class="hl2">B200/GB200/Rubin、MI355/MI400</td>
+                </tr>
+                <tr>
+                    <td><strong>量产时间</strong></td>
+                    <td>2011 首发</td>
+                    <td>~2020</td>
+                    <td class="hl2">2023，主导 2024–2027</td>
+                </tr>
+            </table>
+            <div class="callout">
+                <strong>关键趋势</strong>：CoWoS-L 以 LSI 硅桥 + RDL 重构插层接棒 CoWoS-S，成为 2025–2027 主流。
+                2027 年将推 9× 光罩 "Super Carrier"，封装体达 100×100 mm，可容纳 12+ HBM4。
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== 图3：工艺流程 ===================== -->
+    <div class="figure">
+        <div class="figure-header">
+            <div class="figure-num n3">03</div>
+            <div class="figure-title">CoWoS 工艺流程 — 从晶圆到封装体</div>
+        </div>
+        <div class="figure-body">
+            <div class="flow-row" style="flex-direction:column; align-items:stretch; gap:8px;">
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <div class="flow-box accent" style="width:40px;text-align:center;flex-shrink:0;">①</div>
+                    <span class="fig-p" style="margin:0;"><strong>中介层制造</strong> — 12 寸硅晶圆 BEOL 工艺，形成多层 RDL（铜大马士革）+ DTC 嵌入式电容</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <div class="flow-box accent" style="width:40px;text-align:center;flex-shrink:0;">②</div>
+                    <span class="fig-p" style="margin:0;"><strong>TSV 形成</strong> — 深反应离子刻蚀 → 介质/阻挡层/种子层沉积 → 电镀铜填充 → CMP 平坦化</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <div class="flow-box teal" style="width:40px;text-align:center;flex-shrink:0;">③</div>
+                    <span class="fig-p" style="margin:0;"><strong>正面微凸块</strong> — 节距 40→25→9 μm，向混合键合（<10 μm）演进</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <div class="flow-box teal" style="width:40px;text-align:center;flex-shrink:0;">④</div>
+                    <span class="fig-p" style="margin:0;"><strong>CoW 阶段</strong> — GPU + HBM 通过 TC-Bonding / Hybrid Bonding 键合到中介层 → Underfill → Mold</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <div class="flow-box amber" style="width:40px;text-align:center;flex-shrink:0;">⑤</div>
+                    <span class="fig-p" style="margin:0;"><strong>背面减薄</strong> — 临时键合载板 → 减薄露出 TSV → 背面 RDL + C4 bump</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <div class="flow-box amber" style="width:40px;text-align:center;flex-shrink:0;">⑥</div>
+                    <span class="fig-p" style="margin:0;"><strong>WoS 阶段</strong> — C4 凸块焊接到 ABF 基板 → Underfill → Lid → BGA 植球 → 测试</span>
+                </div>
+            </div>
+            <div class="callout key">
+                <strong>CoWoS-L 的区别</strong>：第①步替换为先制造 LSI 硅桥小芯粒，再嵌入 RDL 重构插层（RI），绕开整片大尺寸硅中介层的光刻拼接难题。
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== 图4：产能 ===================== -->
+    <div class="figure">
+        <div class="figure-header">
+            <div class="figure-num n4">04</div>
+            <div class="figure-title">台积电 CoWoS 产能狂飙 — 4 年扩 6 倍</div>
+        </div>
+        <div class="figure-body">
+            <table class="fig-table">
+                <tr><th>时点</th><th>月产能（晶圆）</th><th>备注</th></tr>
+                <tr><td>2023 年底</td><td class="hl">1.5 万片</td><td>起点：H100 拉爆需求</td></tr>
+                <tr><td>2024 年底</td><td class="hl">3.5 万片</td><td>翻倍，仍严重供不应求</td></tr>
+                <tr><td>2025 年底</td><td class="hl2">7.5–8 万片</td><td>再翻倍，缺口 ~15%</td></tr>
+                <tr><td><strong>2026 年底</strong></td><td class="hl3"><strong>9.3–13 万片</strong></td><td>缺口降至 ~10%</td></tr>
+            </table>
+            <div class="metric-row">
+                <div class="metric-box"><div class="val blue">100万</div><div class="label">2026 全球 CoWoS 晶圆需求/年</div></div>
+                <div class="metric-box"><div class="val teal">+49%</div><div class="label">2026 同比增速</div></div>
+                <div class="metric-box"><div class="val amber">>80%</div><div class="label">2022–2027 产能 CAGR</div></div>
+            </div>
+            <p class="fig-p"><strong>五大先进封装厂区</strong>：竹南 AP6（首座 3DFabric）、嘉义 AP7（SoIC 2027 年飙升至 5 万片/月）、台南 AP8（CoWoS 主力，年底 >4 万片/月）、龙潭、中科</p>
+            <div class="callout warn">
+                <strong>现实</strong>：未来 2 年 CoWoS 产能已被预订一空（"Sold Out"），生命周期延长至 2029–2030。
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== 图5：客户分配 ===================== -->
+    <div class="figure">
+        <div class="figure-header">
+            <div class="figure-num n5">05</div>
+            <div class="figure-title">谁在抢 CoWoS？—— 客户产能分配（2026 预测）</div>
+        </div>
+        <div class="figure-body">
+            <div class="bar-chart">
+                <div class="bar-row">
+                    <div class="bar-label">NVIDIA</div>
+                    <div class="bar-track"><div class="bar-fill green" style="width:60%;">59.5 万片 ≈ 60%</div></div>
+                </div>
+                <div class="bar-row">
+                    <div class="bar-label">Broadcom</div>
+                    <div class="bar-track"><div class="bar-fill blue" style="width:15%;">14.5 万片 ≈ 15%</div></div>
+                </div>
+                <div class="bar-row">
+                    <div class="bar-label">AMD</div>
+                    <div class="bar-track"><div class="bar-fill red" style="width:11%;">8 万片 ≈ 11%</div></div>
+                </div>
+                <div class="bar-row">
+                    <div class="bar-label">其他</div>
+                    <div class="bar-track"><div class="bar-fill purple" style="width:14%;">AWS/Apple/MediaTek ≈ 14%</div></div>
+                </div>
+            </div>
+            <div class="metric-row">
+                <div class="metric-box"><div class="val green">540万</div><div class="label">2026 NVIDIA GPU 出货量</div></div>
+                <div class="metric-box"><div class="val blue">240万</div><div class="label">其中 Rubin 平台</div></div>
+                <div class="metric-box"><div class="val red">25%</div><div class="label">AI 占台积电 2025 总收入</div></div>
+            </div>
+            <div class="callout">
+                <strong>客户格局</strong>：NVIDIA 独吞 60% 产能（Rubin 平台占大头），Broadcom 背后是 Google TPU / Meta / OpenAI，AMD MI355/MI400 紧追，AWS Trainium 自研 ASIC 挤入。Tesla 已与三星签长约。
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== 图6：HBM 协同 ===================== -->
+    <div class="figure">
+        <div class="figure-header">
+            <div class="figure-num n6">06</div>
+            <div class="figure-title">HBM × CoWoS — AI 芯片的"黄金搭档"</div>
+        </div>
+        <div class="figure-body">
+            <table class="fig-table">
+                <tr><th>规格</th><th>HBM3E（2025 主力）</th><th>HBM4（2025 H2 起）</th></tr>
+                <tr><td>接口位宽</td><td>1024-bit</td><td class="hl">2048-bit（翻倍）</td></tr>
+                <tr><td>单堆栈带宽</td><td>~1.2 TB/s</td><td class="hl">≥ 2.0 TB/s</td></tr>
+                <tr><td>堆叠</td><td>8-Hi / 12-Hi</td><td>12-Hi (36GB) / <span class="hl">16-Hi (48GB)</span></td></tr>
+                <tr><td>Base Die</td><td>纯存储工艺</td><td class="hl2">逻辑工艺（台积电 N5/N12FFC+）</td></tr>
+                <tr><td>功耗效率</td><td>基准</td><td>提升 20–40%</td></tr>
+            </table>
+            <p class="fig-p"><strong>三强 HBM4 竞速</strong>：</p>
+            <table class="fig-table">
+                <tr><th></th><th>SK 海力士</th><th>三星</th><th>美光</th></tr>
+                <tr><td>量产</td><td class="hl2">2025 H2 首发</td><td>2026 H1</td><td>2026 Q1</td></tr>
+                <tr><td>16-Hi</td><td class="hl2">CES 2026 首发 48GB</td><td>已送样</td><td>跟进中</td></tr>
+                <tr><td>良率</td><td class="hl2">80%+</td><td class="dim">60–75%</td><td class="dim">50–60%</td></tr>
+                <tr><td>封装工艺</td><td class="hl2">MR-MUF（独家）</td><td>TC-NCF</td><td>TC-NCF</td></tr>
+                <tr><td>NVIDIA 份额</td><td class="hl2">60–70%</td><td>20%+</td><td>10–15%</td></tr>
+            </table>
+            <div class="callout key">
+                <strong>强耦合逻辑</strong>：每颗 B200 配 8 颗 HBM3E，Rubin R100 配 8 颗 HBM4，R200 配 12+ 颗 HBM4。
+                CoWoS 月产能 → GPU 月产能 → HBM 总需求，三者成正比。<br>
+                2026 年 HBM 市场规模约 <strong>580 亿美元</strong>，全球需求约 30 亿 GB。
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== 图7：竞争格局 ===================== -->
+    <div class="figure">
+        <div class="figure-header">
+            <div class="figure-num n7">07</div>
+            <div class="figure-title">竞争格局 — 谁能挑战台积电？</div>
+        </div>
+        <div class="figure-body">
+            <table class="fig-table">
+                <tr><th>玩家</th><th>技术</th><th>优势</th><th>短板</th></tr>
+                <tr>
+                    <td><strong>台积电 CoWoS</strong></td>
+                    <td class="hl">市占 ~85%+</td>
+                    <td>技术成熟、客户锁定、生态壁垒</td>
+                    <td>产能永远不够</td>
+                </tr>
+                <tr>
+                    <td><strong>三星 I-Cube</strong></td>
+                    <td>I-Cube4/8 + SF4S</td>
+                    <td>IDM 一体化（HBM4 base die 自家 4nm）</td>
+                    <td class="dim">HBM3E 良率落后；HBM4 良率 60–75%</td>
+                </tr>
+                <tr>
+                    <td><strong>Intel EMIB/Foveros</strong></td>
+                    <td>EMIB-T 2.5D + Foveros 3D</td>
+                    <td>美国本土制造；成本低于 CoWoS-S 30–40%</td>
+                    <td class="dim">产能 <2 万片/月；客户认证周期长</td>
+                </tr>
+                <tr>
+                    <td><strong>日月光 ASE</strong></td>
+                    <td>FOCoS-Bridge TSV 版</td>
+                    <td>最接近 CoWoS-L 的 OSAT 方案</td>
+                    <td class="dim">中端市场为主</td>
+                </tr>
+            </table>
+            <p class="fig-p">
+                <strong>Intel 路线图野心</strong>：2026 年单封装集成 >20 个 EMIB 桥、12 个 HBM、120×120 mm；
+                2028 年扩展到 120×180 mm。已传出 Apple / Qualcomm / NVIDIA / Marvell 因 CoWoS 紧缺转单评估。
+            </p>
+            <div class="callout">
+                <strong>判断</strong>：2026 年三星市占 5–10%，Intel <5%。前沿 AI 训练芯片仍由台积电主导，但地缘政治 + CoWoS 缺货正在打开裂缝。
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== 图8：产业链 ===================== -->
+    <div class="figure">
+        <div class="figure-header">
+            <div class="figure-num n8">08</div>
+            <div class="figure-title">产业链全景 — 设备与材料</div>
+        </div>
+        <div class="figure-body">
+            <p class="fig-p"><strong>关键键合设备</strong>（CR5 ≈ 88%，高度垄断）</p>
+            <table class="fig-table">
+                <tr><th>厂商</th><th>核心产品</th><th>地位</th></tr>
+                <tr><td class="hl">BESI（荷）</td><td>混合键合机 Kinex</td><td class="hl">混合键合市占 ~70%</td></tr>
+                <tr><td>ASMPT（新/荷）</td><td>TCB 热压键合</td><td>HBM TCB 主供</td></tr>
+                <tr><td>K&S（美）</td><td>TCB + Pillar Bonder</td><td>全球前三</td></tr>
+                <tr><td>SUSS（德）</td><td>临时键合/解键合 XBS300</td><td>临时键合领先</td></tr>
+                <tr><td>EVG（奥）</td><td>W2W 混合键合</td><td>W2W 龙头</td></tr>
+            </table>
+            <div class="metric-row">
+                <div class="metric-box"><div class="val blue">15亿</div><div class="label">2027 TCB 键合机市场（$）</div></div>
+                <div class="metric-box"><div class="val teal">4亿</div><div class="label">2030 混合键合设备市场（$）</div></div>
+                <div class="metric-box"><div class="val amber">21%</div><div class="label">混合键合 CAGR</div></div>
+            </div>
+            <div class="divider"></div>
+            <p class="fig-p"><strong>关键材料</strong></p>
+            <table class="fig-table">
+                <tr><th>材料</th><th>海外龙头</th><th>国产替代</th><th>关键状况</th></tr>
+                <tr><td>ABF 载板</td><td>味之素（独家）</td><td>兴森科技、深南电路</td><td>新单溢价 30–40%</td></tr>
+                <tr><td>EMC 塑封料</td><td>住友电木</td><td class="hl2">华海诚科</td><td>2026.6 起全系涨价 10–20%</td></tr>
+                <tr><td>Underfill</td><td>Henkel / Namics</td><td>回天新材</td><td>可靠性命门</td></tr>
+                <tr><td>M9 玻纤布</td><td>日东纺</td><td class="hl2">菲利华</td><td>已通过 NVIDIA / TSMC 认证</td></tr>
+                <tr><td>玻璃基板</td><td>康宁 / AGC</td><td>沃格光电、清越科技</td><td>下一代 CoPoS 关键</td></tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- ===================== 图9：未来演进 ===================== -->
+    <div class="figure">
+        <div class="figure-header">
+            <div class="figure-num n9">09</div>
+            <div class="figure-title">未来演进 — CoPoS / SoIC / Chiplet</div>
+        </div>
+        <div class="figure-body">
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="year">2026 H2 — CoWoS-L 5.5× 光罩</div>
+                    <div class="desc">NVIDIA Rubin R100/R200 量产，配 8–12 颗 HBM4</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="year">2026 — UCIe 2.0 生态成熟</div>
+                    <div class="desc">3D 封装互连标准确立，Chiplet 生态 240 亿美元市场</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="year">2027 — CoWoS-L 9× 光罩 "Super Carrier"</div>
+                    <div class="desc">封装体 100×100 mm，12+ HBM4，SoIC 月产能 7000+ 片</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="year">2027–2028 — CoPoS 试产→量产</div>
+                    <div class="desc">玻璃基板利用率 >90%（vs 晶圆 ~70%），降本 30%</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="year">2029 — SoIC A14-on-A14</div>
+                    <div class="desc">I/O 密度比 N2-on-N2 提升 1.8 倍，混合键合间距 → 3μm</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="year">2030+ — 玻璃核心基板</div>
+                    <div class="desc">CoPoS 转向 Glass Core Substrate，TGV 工艺成熟</div>
+                </div>
+            </div>
+            <div class="callout warn">
+                <strong>CoPoS 推迟</strong>：原计划 2028 量产，因均匀度与翘曲瓶颈，最新时程推迟至 2030 Q4 才会出首批产品。这意味着 CoWoS 生命周期延长至 2029–2030。
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== 图10：中国启示 ===================== -->
+    <div class="figure">
+        <div class="figure-header">
+            <div class="figure-num n10">10</div>
+            <div class="figure-title">中国启示 — 先进封装是突围关键</div>
+        </div>
+        <div class="figure-body">
+            <p class="fig-p"><strong>国内封测三巨头（2024–2025）</strong></p>
+            <table class="fig-table">
+                <tr><th>公司</th><th>先进封装占比</th><th>核心技术</th><th>卡位策略</th></tr>
+                <tr><td class="hl2">长电科技</td><td class="hl2">超 40%（270 亿元）</td><td>XDFOI Chiplet、2.5D/3D、TSV</td><td>全栈式，2026 固投 100+ 亿</td></tr>
+                <tr><td>通富微电</td><td>国内产量 22.25%</td><td>与 AMD 深度绑定</td><td>AMD 嫡系</td></tr>
+                <tr><td>华天科技</td><td>—</td><td>TSV、扇出型</td><td>中端突破</td></tr>
+            </table>
+            <div class="divider"></div>
+            <p class="fig-p"><strong>六条战略启示</strong></p>
+            <div class="callout red">
+                <strong>① "超越摩尔"的战略支点</strong>：先进制程被卡，先进封装是中国突围的关键路径。台积电以 CoWoS 印证"封装即制造"的范式转变。
+            </div>
+            <div class="callout">
+                <strong>② 设备国产化攻坚</strong>：键合设备 CR5 = 88% 被海外垄断，TCB 与混合键合是结构性增量赛道（CAGR 11–21%），国产设备需重点突破。
+            </div>
+            <div class="callout key">
+                <strong>③ 材料链补短板</strong>：ABF 载板、高端 EMC、底部填充胶是"卡脖子"。菲利华通过 NVIDIA / TSMC 认证是重要突破口。
+            </div>
+            <div class="callout warn">
+                <strong>④ 生态与标准话语权</strong>：UCIe 联盟无中国大陆厂商创始成员，需在 Chiplet 标准布局自主开放生态。
+            </div>
+            <div class="callout">
+                <strong>⑤ CoPoS / 玻璃基板"换道超车"</strong>：量产窗口 2027–2030 尚未封死，沃格光电、清越科技应抢占 TGV / 玻璃载板布局。
+            </div>
+            <div class="callout red">
+                <strong>⑥ AI 算力 = 封装供给</strong>：限制 AI 硬件供应的不只是先进制程，更是 CoWoS 产能和材料端。中国需打通"芯片-基板-材料-设备"四位一体闭环。
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== 数据来源 ===================== -->
+    <div class="figure">
+        <div class="figure-header">
+            <div class="figure-num" style="background:rgba(100,116,139,0.15);color:#94a3b8;">ℹ</div>
+            <div class="figure-title">数据来源</div>
+        </div>
+        <div class="figure-body">
+            <p class="fig-p" style="font-size:12px;color:var(--text-dim);line-height:1.9;">
+                摩根士丹利《TSMC CoWoS Capacity 2026》（2025/7）· Yole Group 先进封装市场报告 · TrendForce · J.P. Morgan TCB 设备报告 ·
+                IDC 全球半导体预测 · 台积电 3DFabric 技术研讨会 · JEDEC HBM4 标准（2025.4） ·
+                各公司财报及公告 · 华尔街见闻 / 搜狐财经 / 新浪财经（Digitimes 转载）
+            </p>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>由 Fiona 🦊 深度调研生成 · 数据截至 2026 Q2</p>
+        <p style="margin-top:8px;"><a href="../index.html" style="color:var(--accent);text-decoration:none;">← 返回首页</a></p>
+    </div>
+</div>
+</body>
+</html>
