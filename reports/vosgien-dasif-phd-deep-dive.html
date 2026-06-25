@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vosgien 博士论文深度拆解 — DASIF 与设计-分析数据集成</title>
+    <style>
+        :root {
+            --bg: #0a0e1a;
+            --card: #111827;
+            --card-alt: #0f172a;
+            --border: #1e293b;
+            --accent: #3b82f6;
+            --teal: #14b8a6;
+            --amber: #f59e0b;
+            --purple: #a78bfa;
+            --red: #ef4444;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --text-dim: #64748b;
+            --code-bg: #1e293b;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.75;
+            min-height: 100vh;
+        }
+        .container { max-width: 820px; margin: 0 auto; padding: 48px 20px 80px; }
+
+        /* Back link */
+        .back-link {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-size: 13px; color: var(--text-dim); text-decoration: none;
+            margin-bottom: 24px; transition: color 0.2s;
+        }
+        .back-link:hover { color: var(--accent); }
+
+        /* Header */
+        .header { margin-bottom: 40px; padding-bottom: 28px; border-bottom: 1px solid var(--border); }
+        .header .badge-row { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+        .badge {
+            display: inline-block; font-size: 10px; font-weight: 700;
+            padding: 3px 10px; border-radius: 6px; letter-spacing: 0.5px;
+        }
+        .badge.deep-dive { color: var(--teal); background: rgba(20,184,166,0.12); }
+        .badge.industry { color: var(--amber); background: rgba(245,158,11,0.12); }
+        .badge.mbse { color: var(--purple); background: rgba(167,139,250,0.12); }
+        .badge.crescendo { color: var(--accent); background: rgba(59,130,246,0.12); }
+        .header h1 {
+            font-size: 28px; font-weight: 800; line-height: 1.3; margin-bottom: 12px;
+            background: linear-gradient(135deg, #e2e8f0, #94a3b8);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .header .subtitle {
+            font-size: 14px; color: var(--text-dim); line-height: 1.6;
+            border-left: 3px solid var(--teal); padding-left: 12px; margin-top: 8px;
+        }
+        .meta-row {
+            display: flex; gap: 16px; margin-top: 14px; font-size: 12px; color: var(--text-dim);
+            flex-wrap: wrap;
+        }
+        .meta-row span { display: flex; align-items: center; gap: 4px; }
+
+        /* TOC */
+        .toc {
+            background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+            padding: 20px 24px; margin-bottom: 40px;
+        }
+        .toc-title {
+            font-size: 13px; font-weight: 700; letter-spacing: 1px;
+            color: var(--text-dim); margin-bottom: 12px; text-transform: uppercase;
+        }
+        .toc ol { padding-left: 20px; }
+        .toc li { margin-bottom: 6px; }
+        .toc a {
+            font-size: 14px; color: var(--text-muted); text-decoration: none;
+            transition: color 0.2s;
+        }
+        .toc a:hover { color: var(--accent); }
+
+        /* Sections */
+        h2 {
+            font-size: 22px; font-weight: 800; margin-top: 48px; margin-bottom: 16px;
+            padding-bottom: 10px; border-bottom: 1px solid var(--border);
+            color: #f1f5f9;
+        }
+        h3 {
+            font-size: 17px; font-weight: 700; margin-top: 28px; margin-bottom: 10px;
+            color: var(--teal);
+        }
+        h4 {
+            font-size: 15px; font-weight: 600; margin-top: 20px; margin-bottom: 8px;
+            color: var(--text-muted);
+        }
+        p { margin-bottom: 14px; font-size: 15px; color: var(--text); }
+
+        /* Lists */
+        ul, ol { margin: 10px 0 14px 24px; }
+        li { margin-bottom: 6px; font-size: 15px; }
+        li strong { color: #f1f5f9; }
+
+        /* Blockquote */
+        blockquote {
+            border-left: 3px solid var(--accent); background: rgba(59,130,246,0.06);
+            padding: 14px 18px; margin: 16px 0; border-radius: 0 8px 8px 0;
+            font-size: 14px; color: var(--text-muted);
+        }
+        blockquote strong { color: var(--accent); }
+
+        /* Code blocks */
+        pre {
+            background: var(--code-bg); border: 1px solid var(--border); border-radius: 10px;
+            padding: 18px 20px; margin: 14px 0; overflow-x: auto; font-size: 13px;
+            line-height: 1.6;
+        }
+        code {
+            font-family: "SF Mono", "Fira Code", "Cascadia Code", monospace;
+            font-size: 13px;
+        }
+        p code, li code {
+            background: var(--code-bg); padding: 2px 6px; border-radius: 4px;
+            font-size: 13px; color: var(--teal);
+        }
+
+        /* Tables */
+        .table-wrap { overflow-x: auto; margin: 14px 0; }
+        table {
+            width: 100%; border-collapse: collapse; font-size: 14px;
+            background: var(--card); border-radius: 10px; overflow: hidden;
+        }
+        th {
+            background: rgba(59,130,246,0.08); color: var(--accent); font-weight: 600;
+            text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border);
+            font-size: 13px;
+        }
+        td {
+            padding: 9px 14px; border-bottom: 1px solid rgba(30,41,59,0.5);
+            color: var(--text-muted);
+        }
+        td strong { color: var(--text); }
+        tr:last-child td { border-bottom: none; }
+
+        /* Diagram box */
+        .diagram {
+            background: var(--card-alt); border: 1px solid var(--border); border-radius: 12px;
+            padding: 20px 24px; margin: 18px 0; font-family: "SF Mono", "Fira Code", monospace;
+            font-size: 13px; line-height: 1.7; color: var(--text-muted);
+            white-space: pre; overflow-x: auto;
+        }
+        .diagram .kw { color: var(--purple); }
+        .diagram .fn { color: var(--teal); }
+        .diagram .cm { color: var(--text-dim); }
+        .diagram .arrow { color: var(--accent); }
+
+        /* Insight box */
+        .insight-box {
+            background: linear-gradient(135deg, rgba(20,184,166,0.08), rgba(59,130,246,0.06));
+            border: 1px solid rgba(20,184,166,0.2); border-radius: 12px;
+            padding: 18px 22px; margin: 20px 0;
+        }
+        .insight-box .insight-label {
+            font-size: 11px; font-weight: 700; letter-spacing: 1px;
+            color: var(--teal); text-transform: uppercase; margin-bottom: 8px;
+        }
+        .insight-box p { font-size: 14px; margin-bottom: 0; }
+
+        /* Gap analysis */
+        .gap-item {
+            display: flex; align-items: flex-start; gap: 8px;
+            margin-bottom: 8px; font-size: 14px;
+        }
+        .gap-ok { color: var(--teal); }
+        .gap-fail { color: var(--red); }
+
+        /* Footer */
+        .footer { text-align: center; padding-top: 40px; border-top: 1px solid var(--border); margin-top: 48px; }
+        .footer p { font-size: 12px; color: var(--text-dim); }
+
+        @media (max-width: 600px) {
+            .container { padding: 24px 16px 60px; }
+            h1 { font-size: 22px !important; }
+            h2 { font-size: 18px; }
+            pre, .diagram { font-size: 12px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="../index.html" class="back-link">← 返回首页</a>
+
+        <div class="header">
+            <div class="badge-row">
+                <span class="badge deep-dive">DEEP DIVE</span>
+                <span class="badge mbse">MBSE</span>
+                <span class="badge industry">INDUSTRIAL SOFTWARE</span>
+                <span class="badge crescendo">CRESCENDO EU FP7</span>
+            </div>
+            <h1>Vosgien 博士论文深度拆解<br>DASIF 与设计-分析数据集成</h1>
+            <div class="subtitle">
+                Thomas Vosgien — <em>Model-Based System Engineering enabling Design-Analysis Data Integration in Digital Design Environments</em><br>
+                Application to collaborative aeronautics simulation-based design process and turbojet integration studies
+            </div>
+            <div class="meta-row">
+                <span>🏫 École Centrale Paris</span>
+                <span>📅 2015</span>
+                <span>📄 407页</span>
+                <span>🇪🇺 CRESCENDO FP7-234344</span>
+                <span>🏭 Snecma / SAFRAN</span>
+            </div>
+        </div>
+
+        <!-- TOC -->
+        <div class="toc">
+            <div class="toc-title">📋 目录</div>
+            <ol>
+                <li><a href="#core-problem">核心问题：DMU-BMU 数据鸿沟</a></li>
+                <li><a href="#concept-system">四层概念体系</a></li>
+                <li><a href="#key-innovations">三大关键技术贡献</a></li>
+                <li><a href="#data-model">概念数据模型（3层架构）</a></li>
+                <li><a href="#prototype">原型实现与验证</a></li>
+                <li><a href="#thesis-structure">论文结构速查</a></li>
+                <li><a href="#implications">对工业软件的启示</a></li>
+                <li><a href="#glossary">关键术语表</a></li>
+                <li><a href="#lineage">与后续项目的关系</a></li>
+            </ol>
+        </div>
+
+        <!-- Section 1 -->
+        <h2 id="core-problem">一、核心问题</h2>
+
+        <p>航空业面临一个根本性断裂：<strong>设计（CAD/DMU）和仿真（CAE/BMU）之间存在"数据鸿沟"</strong>。</p>
+
+        <p>具体表现：</p>
+        <ul>
+            <li>DMU（数字样机）只有几何信息，缺乏行为描述</li>
+            <li>仿真工程师每次都手动从 DMU 提取数据、重建模型、定义接口</li>
+            <li>设计变更后，仿真模型无法自动追踪和更新</li>
+            <li>多学科协同仿真时，各合作伙伴使用的工具/数据模型不兼容</li>
+            <li>没有统一的"接口对象"来描述组件间的物理交互</li>
+        </ul>
+
+        <div class="insight-box">
+            <div class="insight-label">💡 核心问题</div>
+            <p>如何让"几何定义"和"行为仿真"在同一数字环境中<strong>双向同步</strong>？</p>
+        </div>
+
+        <!-- Section 2 -->
+        <h2 id="concept-system">二、四层概念体系</h2>
+
+        <h3>第 1 层：DMU → DDMU（Derived DMU）</h3>
+
+        <div class="diagram"><span class="kw">Referential DMU</span> (RDMU)  <span class="arrow">──结构/形状变换──→</span>  <span class="kw">Derived DMU</span> (DDMU)
+     │                                        │
+  完整几何定义                          面向仿真的简化几何
+  面向设计团队                          面向分析团队
+  由 PDM 管理                           由 SDM 管理</div>
+
+        <div class="insight-box">
+            <div class="insight-label">🔑 关键洞察</div>
+            <p>同一个产品需要多种"视图"——设计视图、结构分析视图、热分析视图等。DMU 不应只有一个，而应能派生出多个"下游 DMU"，每个适配特定仿真需求。</p>
+        </div>
+
+        <h3>第 2 层：DMU → BMU（Behavioural Mock-Up）</h3>
+
+        <div class="diagram"><span class="kw">DMU</span> (几何世界)              <span class="kw">BMU</span> (行为世界)
+├── 几何形状                 ├── 仿真模型
+├── 装配结构                 ├── 网格模型
+├── 物理接口                 ├── 边界条件
+└── BOM                      └── 仿真结果
+        │                          │
+        └──── <span class="fn">DASIF 双向桥</span> ────────┘</div>
+
+        <p><strong>BMU 定义</strong>：DMU 的仿真等价物——不仅包含几何，还逻辑链接所有仿真物理行为所需的数据和模型。</p>
+
+        <h3>第 3 层：DASIF 框架（核心贡献）</h3>
+
+        <div class="diagram">┌─────────────────────────────────────────────────────────┐
+│                    <span class="fn">DASIF 框架</span>                            │
+│                                                         │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
+│  │<span class="kw">系统定义层</span>    │  │<span class="kw">拓扑层</span>       │  │<span class="kw">配置管理层</span>   │  │
+│  │System        │  │Topological   │  │Config        │  │
+│  │Definition    │  │Layer         │  │Management    │  │
+│  │Layer         │  │              │  │Layer         │  │
+│  │              │  │              │  │              │  │
+│  │• 功能制品    │  │• CAD拓扑     │  │• 多视图配置  │  │
+│  │• 结构制品    │  │• FE拓扑      │  │• 变更传播    │  │
+│  │• 行为制品    │  │• 接口映射    │  │• 效度管理    │  │
+│  │• 接口/交互   │  │              │  │              │  │
+│  └──────────────┘  └──────────────┘  └──────────────┘  │
+│                                                         │
+│  互操作层：PDM/SLM 语义映射 + BDA BOM 标准化交换        │
+└─────────────────────────────────────────────────────────┘
+         ↕                        ↕
+    CAD-DMU 环境              CAE-BMU 环境</div>
+
+        <p><strong>DASIF = Design-Analysis System Integration Framework</strong></p>
+
+        <p>三大核心能力组合：</p>
+        <ol>
+            <li><strong>PDM 配置管理</strong> — 多视图产品结构、效度(effectivity)、变更传播</li>
+            <li><strong>MBSE 系统建模</strong> — SysML 扩展、面向对象的接口建模、端口委派</li>
+            <li><strong>SDM 仿真数据管理</strong> — 仿真意图、建模需求、模型质量</li>
+        </ol>
+
+        <h3>第 4 层：BDA BOM（标准化数据模型）</h3>
+
+        <p>DASIF 的概念数据模型被贡献给 CRESCENDO 项目的 BDA 平台，形成 <strong>BDA Business Object Model</strong>——一个标准化的共享数据模型，使异构 PLM/SLM 系统能够互操作。</p>
+
+        <!-- Section 3 -->
+        <h2 id="key-innovations">三、三大关键技术贡献</h2>
+
+        <h3>1. 数字接口建模（Digital Interface Modelling）</h3>
+
+        <p>这是论文<strong>最核心的创新</strong>。传统 DMU 只描述几何邻接关系，Vosgien 提出：</p>
+
+        <div class="diagram"><span class="kw">Interface</span> = <span class="fn">3 层架构</span>
+├── <span class="kw">Design Layer</span>    → CAD 特征级接口定义（面、边、坐标系）
+├── <span class="kw">Behaviour Layer</span> → 物理行为描述（力、热、流边界条件）
+└── <span class="kw">Applicative Layer</span> → 仿真工具特定的接口参数映射</div>
+
+        <ul>
+            <li>接口通过 <strong>Ports（端口）</strong>建模，支持层级委派（子组件端口→父组件端口）</li>
+            <li>接口对象可<strong>封装和复用</strong>：一次定义，多次仿真使用</li>
+            <li>支持多物理场：结构、热、流体接口统一建模</li>
+        </ul>
+
+        <h3>2. 多视图 DMU 配置管理</h3>
+
+        <div class="diagram">RDMU ──→ <span class="kw">Product View 1</span> (结构分析) ──→ DDMU₁ ──→ BMU₁
+  │──→ <span class="kw">Product View 2</span> (热分析)     ──→ DDMU₂ ──→ BMU₂
+  │──→ <span class="kw">Product View 3</span> (气动分析)   ──→ DDMU₃ ──→ BMU₃
+  └──→ <span class="kw">Product View N</span> (...)        ──→ DDMUₙ ──→ BMUₙ</div>
+
+        <p><strong>Product View</strong> 定义了产品表示与使用/生成该表示的活动之间的链接。每个 Product View 定义了：</p>
+        <ul>
+            <li>适用域（Domain of Validity）</li>
+            <li>相关仿真意图（Simulation Intent）</li>
+            <li>所需的结构/形状变换</li>
+        </ul>
+
+        <h3>3. 仿真意图驱动（Simulation Intent）</h3>
+
+        <div class="diagram"><span class="kw">Simulation Intent</span> → <span class="kw">Modelling Requirements</span> → <span class="fn">自动化建模程序</span>
+     │                    │                        │
+  "为什么做仿真"     "需要什么精度/抽象级别"    "如何自动生成网格/模型"</div>
+
+        <p>这一机制使得：</p>
+        <ul>
+            <li>给定仿真意图后，系统自动选择合适的建模要求</li>
+            <li>建模要求驱动 DMU→DDMU 的变换参数</li>
+            <li>最终实现 FE 模型的<strong>自动装配</strong></li>
+        </ul>
+
+        <h3>4. CAD-CAE 双向可追溯性</h3>
+
+        <div class="diagram"><span class="kw">CAD Model</span> ←──特征映射──→ <span class="fn">System Object</span> ←──特征映射──→ <span class="kw">FE Model</span>
+    │                        │                         │
+  几何特征              接口/交互定义              网格特征
+  (面、边、孔)          (端口、连接器)           (节点、单元)</div>
+
+        <p>每个 FE 模型都可以追溯到其来源 CAD 模型的特征，反之亦然。</p>
+
+        <!-- Section 4 -->
+        <h2 id="data-model">四、概念数据模型（3 层架构）</h2>
+
+        <h3>Layer 1: System Definition Layer</h3>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>核心类</th><th>说明</th></tr></thead>
+                <tbody>
+                    <tr><td><strong>SystemArtefact</strong></td><td>系统制品基类，分 3 个子类</td></tr>
+                    <tr><td><strong>FunctionalArtefact</strong></td><td>功能制品（功能需求、行为规约）</td></tr>
+                    <tr><td><strong>DesignArtefact</strong></td><td>结构制品（物理组件、CAD 模型）</td></tr>
+                    <tr><td><strong>BehaviouralArtefact</strong></td><td>行为制品（仿真模型、网格、结果）</td></tr>
+                    <tr><td><strong>Interface</strong></td><td>3 层接口（设计/行为/应用）</td></tr>
+                    <tr><td><strong>Interaction</strong></td><td>组件间物理交互描述</td></tr>
+                    <tr><td><strong>Port</strong></td><td>接口端口，支持委派</td></tr>
+                    <tr><td><strong>SystemModel</strong></td><td>关联多个制品的系统模型</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Layer 2: Topological Layer</h3>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>核心类</th><th>说明</th></tr></thead>
+                <tbody>
+                    <tr><td><strong>CADTopology</strong></td><td>CAD 几何拓扑（面、边、顶点）</td></tr>
+                    <tr><td><strong>FETopology</strong></td><td>FE 网格拓扑（节点、单元、组）</td></tr>
+                    <tr><td><strong>TopologicalLink</strong></td><td>CAD 拓扑 ↔ FE 拓扑的映射关系</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Layer 3: Configuration Management Layer</h3>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>核心类</th><th>说明</th></tr></thead>
+                <tbody>
+                    <tr><td><strong>ProductView</strong></td><td>产品视图定义（域+意图）</td></tr>
+                    <tr><td><strong>DMUConfiguration</strong></td><td>DMU 配置（关联 RDMU 和 DDMU）</td></tr>
+                    <tr><td><strong>BMUConfiguration</strong></td><td>BMU 配置</td></tr>
+                    <tr><td><strong>Effectivity</strong></td><td>效度定义（适用域）</td></tr>
+                    <tr><td><strong>EngineeringChange</strong></td><td>工程变更</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Section 5 -->
+        <h2 id="prototype">五、原型实现与验证</h2>
+
+        <h3>原型 1：DASIF 独立原型（Python + OCC）</h3>
+        <ul>
+            <li>基于 Python + OpenCascade CAD 库</li>
+            <li>关系数据库存储 DASIF 数据模型</li>
+            <li>从 DMU XML 文件导入数据</li>
+            <li>GUI 实现：系统架构浏览和编辑、DDMU/BMU 配置管理、接口定义和端口管理、FE 模型自动装配代码生成</li>
+        </ul>
+
+        <h3>原型 2：CRESCENDO Product Integration Scenario</h3>
+
+        <p>在两个商业平台上实现 DASIF 概念：</p>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>平台</th><th>功能</th></tr></thead>
+                <tbody>
+                    <tr><td><strong>CATIA/SIMULIA V6</strong> (Dassault Systèmes)</td><td>RFLP 框架 + 3D 接口模板 + 仿真意图管理</td></tr>
+                    <tr><td><strong>Teamcenter for Simulation 9</strong> (Siemens)</td><td>SDM 数据管理 + 仿真流程管理 + BDA BOM 交换</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h4>验证结果</h4>
+        <div class="gap-item"><span class="gap-ok">✅</span> 逻辑架构 → FE 模型自动装配</div>
+        <div class="gap-item"><span class="gap-ok">✅</span> CAD-CAE 数据链全可追溯</div>
+        <div class="gap-item"><span class="gap-ok">✅</span> 仿真意图驱动的网格自动生成</div>
+        <div class="gap-item"><span class="gap-ok">✅</span> 基于 RDF 的 BDA BOM 语义映射和跨平台数据交换</div>
+        <div class="gap-item"><span class="gap-fail">❌</span> 商业工具对接口建模的支持仍不足</div>
+        <div class="gap-item"><span class="gap-fail">❌</span> AP233/AP239 标准无法覆盖协同仿真数据管理需求</div>
+        <div class="gap-item"><span class="gap-fail">❌</span> 变更传播机制尚未完全自动化</div>
+
+        <!-- Section 6 -->
+        <h2 id="thesis-structure">六、论文结构速查</h2>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>部分</th><th>章节</th><th>页数</th><th>核心内容</th></tr></thead>
+                <tbody>
+                    <tr><td><strong>Part I</strong> 问题陈述</td><td>Ch1-4</td><td>22-64</td><td>工业背景、DMU 局限、技术需求</td></tr>
+                    <tr><td><strong>Part II</strong> 文献综述</td><td>Ch5-8</td><td>66-147</td><td>MBSE 方法、DMU→BMU 演进、PDM/SDM 差距分析</td></tr>
+                    <tr><td><strong>Part III</strong> 方法提案</td><td>Ch9-11</td><td>151-239</td><td>Lean-6σ 方法、DASIF 框架、概念数据模型</td></tr>
+                    <tr><td><strong>Part IV</strong> 实现验证</td><td>Ch12-14</td><td>241-295</td><td>原型开发、商业工具实现、结果验证</td></tr>
+                    <tr><td><strong>Conclusions</strong></td><td>Ch15</td><td>296-302</td><td>总结与未来工作</td></tr>
+                    <tr><td><strong>Appendix</strong></td><td>I-XVI</td><td>315-407</td><td>SysML 图、数据模型详图、API 规范等</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Section 7 -->
+        <h2 id="implications">七、对工业软件的启示</h2>
+
+        <h3>1. PLM + MBSE 融合是必然趋势</h3>
+        <p>Vosgien 的核心论点：<strong>PLM 不仅仅是工具，而是管理复杂 SoS 的策略</strong>。MBSE 必须在 PLM 策略中占据核心位置。</p>
+        <p>当前现实：PDM（管几何）和 SDM（管仿真）是割裂的，而产品是一个整体。</p>
+
+        <h3>2. 接口建模是关键短板</h3>
+        <p>现有 PLM/CAE 系统缺乏显式的"接口对象"建模能力。接口信息散落在：</p>
+        <ul>
+            <li>CAD 的装配约束中（隐含）</li>
+            <li>CAE 的边界条件中（隐含）</li>
+            <li>工程师的脑中（隐性知识）</li>
+        </ul>
+
+        <div class="insight-box">
+            <div class="insight-label">🎯 机会</div>
+            <p><strong>数字化接口 = 显性化工程知识</strong>，这是工业软件的机会。</p>
+        </div>
+
+        <h3>3. 多视图配置管理是刚需</h3>
+        <p>一个产品需要面向不同学科/阶段/精度的多种"视图"，但现有系统只支持单一 BOM 结构。需要：</p>
+        <ul>
+            <li>多视图 BOM 管理</li>
+            <li>视图间的变更传播</li>
+            <li>效度（Effectivity）管理</li>
+        </ul>
+
+        <h3>4. 标准化数据模型是互操作基础</h3>
+        <p>BDA BOM 的实践表明：仅依赖 AP233/AP239 不够，需要<strong>组合多个 STEP 协议</strong>才能覆盖协同仿真场景。</p>
+        <ul>
+            <li><code>AP209</code> → FE 模型与结果</li>
+            <li><code>AP233</code> → SysML 系统建模</li>
+            <li><code>AP239</code> → PLCS 产品生命周期支持</li>
+        </ul>
+
+        <h3>5. 仿真自动化仍远未成熟</h3>
+        <p>论文的 Gap Analysis 显示，即使在 CATIA V6 和 Teamcenter 这样的顶级商业平台中：</p>
+        <ul>
+            <li>基于仿真意图的自动建模</li>
+            <li>CAD 特征到仿真参数的自动映射</li>
+            <li>多学科耦合仿真的接口自动处理</li>
+        </ul>
+        <p>以上能力仍不成熟——<strong>仿真自动化存在巨大的工程化空间</strong>。</p>
+
+        <!-- Section 8 -->
+        <h2 id="glossary">八、关键术语表</h2>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>术语</th><th>英文</th><th>含义</th></tr></thead>
+                <tbody>
+                    <tr><td>DMU</td><td>Digital Mock-Up</td><td>数字样机（几何定义）</td></tr>
+                    <tr><td>DDMU</td><td>Derived DMU</td><td>派生数字样机（面向仿真）</td></tr>
+                    <tr><td>BMU</td><td>Behavioural Mock-Up</td><td>行为数字样机（仿真定义）</td></tr>
+                    <tr><td>DASIF</td><td>Design-Analysis System Integration Framework</td><td>设计-分析系统集成框架</td></tr>
+                    <tr><td>BDA</td><td>Behavioural Digital Aircraft</td><td>行为数字飞机（CRESCENDO 核心概念）</td></tr>
+                    <tr><td>BOM</td><td>Business Object Model</td><td>业务对象模型（BDA 标准化数据模型）</td></tr>
+                    <tr><td>RFLP</td><td>Requirements-Functional-Logical-Physical</td><td>需求-功能-逻辑-物理（Dassault 框架）</td></tr>
+                    <tr><td>SLM</td><td>Simulation Lifecycle Management</td><td>仿真生命周期管理</td></tr>
+                    <tr><td>SDM</td><td>Simulation Data Management</td><td>仿真数据管理</td></tr>
+                    <tr><td>SBD</td><td>Simulation-Based Design</td><td>基于仿真的设计</td></tr>
+                    <tr><td>AMN</td><td>Associative Model Network</td><td>关联模型网络</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Section 9 -->
+        <h2 id="lineage">九、与后续项目的关系</h2>
+
+        <div class="diagram"><span class="fn">Vosgien DASIF</span> (2015)
+    │
+    ├──→ <span class="kw">MoSSEC</span> / ISO AP243 — 将 DASIF 接口和仿真数据交换概念标准化
+    ├──→ <span class="kw">AGILE</span> / AGILE 4.0 — 将 DASIF 的"多视图配置"扩展到 MDO 多学科优化
+    └──→ <span class="kw">BDA BOM</span> → BDA Hub — DASIF 数据模型成为 BDA 平台的基础</div>
+
+        <div class="footer">
+            <p>拆解完成 2026-06-25 · 由 Fiona 🦊 生成与发布</p>
+        </div>
+    </div>
+</body>
+</html>
